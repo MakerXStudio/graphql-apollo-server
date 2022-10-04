@@ -2,11 +2,9 @@
   "name": "@makerxstudio/graphql-apollo-server",
   "version": "0.0.1",
   "private": false,
-  "description": "",
+  "description": "A set of MakerX plugins for Apollo Server",
   "author": "MakerX",
   "license": "MIT",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
@@ -14,36 +12,40 @@
     "node": ">=16.0"
   },
   "scripts": {
-    "build": "rimraf dist coverage && tsc -p tsconfig.build.json",
-    "test": "jest --coverage --passWithNoTests",
+    "build": "run-s build:*",
+    "build:0-clean": "rimraf dist coverage",
+    "build:1-compile": "tsc -p tsconfig.build.json",
+    "build:2-copy-pkg-json": "npx --yes @makerx/ts-toolkit@latest copy-package-json",
+    "test": "jest --coverage --coverageReporters=text",
     "lint": "eslint ./src/ --ext .ts",
-    "lint:fix": "eslint ./src/ --ext .ts --fix"
+    "lint:fix": "eslint ./src/ --ext .ts --fix",
+    "check-types": "tsc --noEmit",
+    "audit": "npm audit"
   },
   "dependencies": {
-    "@makerxstudio/graphql-core": "0.0.1",
-    "@makerxstudio/node-common": "0.0.1"
+    "@makerxstudio/graphql-core": "0.2.0",
+    "@makerxstudio/node-common": "0.0.3"
   },
   "peerDependencies": {
     "apollo-server": "3 || 4",
-    "apollo-server-plugin-base": "3"
+    "apollo-server-plugin-base": "3 || 4"
   },
   "devDependencies": {
-    "@types/jest": "^28.1.6",
+    "@tsconfig/node16": "^1.0.3",
+    "@types/jest": "^29.1.1",
     "@types/lodash.omit": "^4.5.7",
     "@types/node-fetch": "^2.6.2",
-    "@typescript-eslint/eslint-plugin": "^5.33.0",
-    "@typescript-eslint/parser": "^5.33.0",
-    "apollo-server": "^3.10.2",
-    "apollo-server-plugin-base": "^3.6.2",
-    "eslint": "8.22.0",
+    "@typescript-eslint/eslint-plugin": "^5.39.0",
+    "@typescript-eslint/parser": "^5.39.0",
+    "eslint": "8.24.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "jest-date": "^1.1.4",
+    "npm-run-all": "^4.1.5",
     "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
-    "ts-jest": "^28.0.7",
+    "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
-    "typescript": "^4.7.4"
+    "typescript": "^4.8.4"
   }
 }

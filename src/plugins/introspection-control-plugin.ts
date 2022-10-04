@@ -5,10 +5,10 @@ import { ApolloServerPlugin, GraphQLRequestContext, GraphQLRequestListener } fro
 
 export const introspectionControlPlugin: ApolloServerPlugin<GraphQLContext> = {
   requestDidStart: ({
-    request: { operationName, query },
+    request: { query },
     context,
   }: GraphQLRequestContext<GraphQLContext>): Promise<GraphQLRequestListener<GraphQLContext> | void> => {
-    if (isProduction && !context.user && isIntrospectionQuery({ operationName, query }))
+    if (isProduction && !context.user && isIntrospectionQuery(query))
       throw new AuthenticationError('Unauthenticated introspection is not supported')
     return Promise.resolve()
   },
