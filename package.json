@@ -16,7 +16,7 @@
     "build:0-clean": "rimraf dist coverage",
     "build:1-compile": "tsc -p tsconfig.build.json",
     "build:2-copy-pkg-json": "npx --yes @makerx/ts-toolkit@latest copy-package-json",
-    "test": "jest --coverage --coverageReporters=text",
+    "test": "jest --passWithNoTests --coverage --coverageReporters=text",
     "lint": "eslint ./src/ --ext .ts",
     "lint:fix": "eslint ./src/ --ext .ts --fix",
     "check-types": "tsc --noEmit",
