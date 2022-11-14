@@ -1,6 +1,6 @@
 {
   "name": "@makerxstudio/graphql-apollo-server",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": false,
   "description": "A set of MakerX plugins for Apollo Server",
   "author": "MakerX",
@@ -27,8 +27,7 @@
     "@makerxstudio/node-common": "0.1.0"
   },
   "peerDependencies": {
-    "apollo-server": "3 || 4",
-    "apollo-server-plugin-base": "3 || 4"
+    "@apollo/server": "4 || 5"
   },
   "devDependencies": {
     "@tsconfig/node16": "^1.0.3",
