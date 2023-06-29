@@ -1,15 +1,20 @@
 {
-  "name": "@makerxstudio/graphql-apollo-server",
-  "version": "1.2.0",
+  "name": "@makerx/graphql-apollo-server",
+  "version": "1.0.0",
   "private": false,
   "description": "A set of MakerX plugins for Apollo Server",
   "author": "MakerX",
   "license": "MIT",
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
   "engines": {
     "node": ">=16.0"
+  },
+  "bugs": {
+    "url": "https://github.com/MakerXStudio/graphql-apollo-server/issues"
+  },
+  "homepage": "https://github.com/MakerXStudio/graphql-apollo-server#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MakerXStudio/graphql-apollo-server.git"
   },
   "scripts": {
     "build": "run-s build:*",
@@ -37,6 +42,7 @@
     "@types/node-fetch": "^2.6.2",
     "@typescript-eslint/eslint-plugin": "^5.44.0",
     "@typescript-eslint/parser": "^5.44.0",
+    "copyfiles": "^2.4.1",
     "eslint": "8.28.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-node": "^11.1.0",
