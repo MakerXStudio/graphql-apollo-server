@@ -42,7 +42,7 @@
     "@types/jest": "^29.5.2",
     "@types/lodash.omit": "^4.5.7",
     "@types/node-fetch": "^2.6.4",
-    "@typescript-eslint/eslint-plugin": "^5.60.1",
+    "@typescript-eslint/eslint-plugin": "^6.1.0",
     "@typescript-eslint/parser": "^5.60.1",
     "better-npm-audit": "^3.7.3",
     "copyfiles": "^2.4.1",
