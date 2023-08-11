@@ -10,13 +10,12 @@ Logging is performed via the `willSendResponse` and `willSendSubsequentPayload` 
 
 ### Options
 
-- `contextCreationDidFail`: If you wish to log or otherwise react to context creation failures, supply a handler for the contextCreationDidFail hook (the plugin does not have access to a logger prior to context creation).
+- `contextCreationFailureLogger`: The plugin does not have access to a logger prior to context creation, so if you wish to log context creation failures, supply a logger here (it will _only_ be called for context creation failure).
+- `contextCreationDidFail`: If you wish to custom log or otherwise react to context creation failures, supply a handler for the plugin `contextCreationDidFail` hook (this will be called instead of logging to `contextCreationFailureLogger`).
 - `shouldIgnore`: an optional callback that can be used to ignore certain operations, e.g. if you have a healthcheck operation that you prefer not to be logged.
 
 ```ts
-const plugins: ApolloServerPlugin<GraphQLContext>[] = [
-  createLoggingPlugin({ contextCreationDidFail: ({ error }) => Promise.resolve(logger.error('Context creation failed', { error })) }),
-]
+const plugins: ApolloServerPlugin<GraphQLContext>[] = [createLoggingPlugin({ contextCreationFailureLogger: logger })]
 ```
 
 Output includes:
