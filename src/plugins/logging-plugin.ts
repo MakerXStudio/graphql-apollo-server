@@ -11,7 +11,17 @@ export interface GraphQLRequestInfo<TContext extends GraphQLContext<any, any, an
 }
 
 export interface LoggingPluginOptions<TContext extends GraphQLContext<any, any, any>> {
+  /***
+   * If provided, this logger will be used to log context creation failures as errors
+   */
+  contextCreationFailureLogger?: Logger
+  /***
+   * If provided, will be bound to the plugin contextCreationDidFail hook to log or otherwise react to context creation failures
+   */
   contextCreationDidFail?: ApolloServerPlugin['contextCreationDidFail']
+  /***
+   * If provided, this function will be called to determine whether to ignore logging for a given request
+   */
   shouldIgnore?: (request: GraphQLRequestInfo<TContext>) => boolean
 }
 
@@ -55,7 +65,9 @@ export function createLoggingPlugin<TContext extends GraphQLContext<TLogger, any
       }
       return Promise.resolve(responseListener)
     },
-    contextCreationDidFail: options.contextCreationDidFail,
+    contextCreationDidFail:
+      options.contextCreationDidFail ??
+      (({ error }) => Promise.resolve(options.contextCreationFailureLogger?.error('Context creation failed', { error }))),
   }
 }
 
