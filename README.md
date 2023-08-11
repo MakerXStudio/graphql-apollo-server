@@ -10,7 +10,7 @@ Logging is performed via the `willSendResponse` and `willSendSubsequentPayload` 
 
 ### Options
 
-- `contextCreationDidFail`: If you wish to log context creation failures, supply a handler for the contextCreationDidFail hook (the plugin does not have access to a logger prior to context creation).
+- `contextCreationDidFail`: If you wish to log or otherwise react to context creation failures, supply a handler for the contextCreationDidFail hook (the plugin does not have access to a logger prior to context creation).
 - `shouldIgnore`: an optional callback that can be used to ignore certain operations, e.g. if you have a healthcheck operation that you prefer not to be logged.
 
 ```ts
