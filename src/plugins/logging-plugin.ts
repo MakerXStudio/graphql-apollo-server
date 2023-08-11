@@ -11,11 +11,12 @@ export interface GraphQLRequestInfo<TContext extends GraphQLContext<any, any, an
 }
 
 export interface LoggingPluginOptions<TContext extends GraphQLContext<any, any, any>> {
+  contextCreationDidFail?: ApolloServerPlugin['contextCreationDidFail']
   shouldIgnore?: (request: GraphQLRequestInfo<TContext>) => boolean
 }
 
 export function createLoggingPlugin<TContext extends GraphQLContext<TLogger, any, any>, TLogger extends Logger = Logger>(
-  options: LoggingPluginOptions<TContext>
+  options: LoggingPluginOptions<TContext> = {}
 ): ApolloServerPlugin<TContext> {
   return {
     requestDidStart: ({ contextValue: { started, logger } }): Promise<GraphQLRequestListener<TContext>> => {
@@ -54,10 +55,11 @@ export function createLoggingPlugin<TContext extends GraphQLContext<TLogger, any
       }
       return Promise.resolve(responseListener)
     },
+    contextCreationDidFail: options.contextCreationDidFail,
   }
 }
 
 /**
  * @deprecated use createLoggingPlugin() directly instead
  */
-export const loggingPlugin: ApolloServerPlugin<GraphQLContext> = createLoggingPlugin({})
+export const loggingPlugin: ApolloServerPlugin<GraphQLContext> = createLoggingPlugin()
