@@ -6,7 +6,17 @@ A set of MakerX plugins for Apollo Server
 
 `loggingPlugin` logs GraphQL operations in a [standard way](https://github.com/MakerXStudio/graphql-core/blob/main/src/logging.ts), using the [`logger`](https://github.com/MakerXStudio/node-common/blob/main/src/logger.ts) from the GraphQL [context](https://github.com/MakerXStudio/graphql-core/blob/main/src/context.ts).
 
-Logging is performed via the `willSendResponse` hook, which will run for operations with errors.
+Logging is performed via the `willSendResponse` and `willSendSubsequentPayload` hooks, which will run for operations with errors.
+
+### Options
+
+- `contextCreationFailureLogger`: The plugin does not have access to a logger prior to context creation, so if you wish to log context creation failures, supply a logger here (it will _only_ be called for context creation failure).
+- `contextCreationDidFail`: If you wish to custom log or otherwise react to context creation failures, supply a handler for the plugin `contextCreationDidFail` hook (this will be called instead of logging to `contextCreationFailureLogger`).
+- `shouldIgnore`: an optional callback that can be used to ignore certain operations, e.g. if you have a healthcheck operation that you prefer not to be logged.
+
+```ts
+const plugins: ApolloServerPlugin<GraphQLContext>[] = [createLoggingPlugin({ contextCreationFailureLogger: logger })]
+```
 
 Output includes:
 
