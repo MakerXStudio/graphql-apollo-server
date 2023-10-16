@@ -24,7 +24,8 @@ export interface GraphQLOperationLoggingPluginOptions<TContext extends GraphQLCo
    */
   contextCreationFailureLogger?: Logger
   /***
-   * If provided, will be bound to the plugin contextCreationDidFail hook to log or otherwise react to context creation failures
+   * If provided, will be bound to the plugin contextCreationDidFail hook to log, or otherwise react to context creation failures.
+   * You may provide this option in addition to the contextCreationFailureLogger, both will be called.
    */
   contextCreationDidFail?: ApolloServerPlugin['contextCreationDidFail']
   /***
@@ -71,12 +72,10 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
   adjustResultData,
 }: GraphQLOperationLoggingPluginOptions<TContext, TLogger> = {}): ApolloServerPlugin<TContext> {
   return {
-    contextCreationDidFail:
-      contextCreationDidFail ??
-      (({ error }) => {
-        contextCreationFailureLogger?.error('Context creation failed', { error })
-        return Promise.resolve()
-      }),
+    contextCreationDidFail: async ({ error }) => {
+      contextCreationFailureLogger?.error('Context creation failed', { error })
+      await contextCreationDidFail?.({ error })
+    },
 
     requestDidStart: ({ contextValue: { started, logger } }): Promise<GraphQLRequestListener<TContext>> => {
       function audit(
