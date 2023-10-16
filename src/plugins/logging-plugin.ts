@@ -25,6 +25,9 @@ export interface LoggingPluginOptions<TContext extends GraphQLContext<any, any, 
   shouldIgnore?: (request: GraphQLRequestInfo<TContext>) => boolean
 }
 
+/**
+ * @deprecated use graphqlOperationLoggingPlugin() instead (more options, breaking changes)
+ */
 export function createLoggingPlugin<TContext extends GraphQLContext<TLogger, any, any>, TLogger extends Logger = Logger>(
   options: LoggingPluginOptions<TContext> = {}
 ): ApolloServerPlugin<TContext> {
