@@ -5,14 +5,10 @@ import type {
   GraphQLRequestListener,
 } from '@apollo/server'
 import type { GraphQLRequestContextWillSendSubsequentPayload } from '@apollo/server/dist/esm/externalTypes/requestPipeline'
-import { isIntrospectionQuery, type GraphQLContext } from '@makerx/graphql-core'
+import { isIntrospectionQuery, logGraphQLOperation, type GraphQLContext, type LoggerLogFunctions } from '@makerx/graphql-core'
 import type { Logger } from '@makerx/node-common'
 import { OperationTypeNode } from 'graphql'
 import { omitNil } from '../utils'
-
-type LoggerLogFunctions<T extends Logger> = {
-  [Property in keyof T]: (message: string, ...optionalParams: unknown[]) => void
-}
 
 export interface GraphQLOperationLoggingPluginOptions<TContext extends GraphQLContext<TLogger, any, any>, TLogger extends Logger = Logger> {
   /**
@@ -78,7 +74,7 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
     },
 
     requestDidStart: ({ contextValue: { started, logger } }): Promise<GraphQLRequestListener<TContext>> => {
-      function audit(
+      function log(
         ctx: GraphQLRequestContextWillSendResponse<TContext>,
         subsequentPayload?: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult
       ) {
@@ -100,32 +96,32 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
           : undefined
         if (adjustResultData && adjustedData) adjustedData = adjustResultData(adjustedData)
 
-        const adjustedResult = omitNil({ errors, data: adjustedData })
+        const adjustedResult = omitNil({ errors, data: adjustedData }) as Record<string, any>
 
-        logger[logLevel as keyof Logger](
-          'GraphQL operation',
-          omitNil({
-            type,
-            operationName,
-            query,
-            variables: adjustedVariables && Object.keys(adjustedVariables).length > 0 ? adjustedVariables : undefined,
-            duration: Date.now() - started,
-            result: Object.keys(adjustedResult).length ? adjustedResult : undefined,
-            isIncrementalResponse: ctx.response.body.kind === 'incremental' || undefined,
-            isSubsequentPayload: !!subsequentPayload || undefined,
-          })
-        )
+        logGraphQLOperation({
+          logger,
+          logLevel,
+          type,
+          operationName,
+          query,
+          started,
+          variables: adjustedVariables && Object.keys(adjustedVariables).length > 0 ? adjustedVariables : undefined,
+          result: Object.keys(adjustedResult).length ? adjustedResult : undefined,
+          isIntrospectionQuery: isIntrospection || undefined,
+          isIncrementalResponse: ctx.response.body.kind === 'incremental' || undefined,
+          isSubsequentPayload: !!subsequentPayload || undefined,
+        })
       }
 
       const responseListener: GraphQLRequestListener<TContext> = {
         willSendResponse(ctx: GraphQLRequestContextWillSendResponse<TContext>): Promise<void> {
           if (shouldIgnore?.(ctx)) return Promise.resolve()
-          audit(ctx)
+          log(ctx)
           return Promise.resolve()
         },
         willSendSubsequentPayload(ctx: GraphQLRequestContextWillSendSubsequentPayload<TContext>, payload): Promise<void> {
           if (shouldIgnore?.(ctx)) return Promise.resolve()
-          audit(ctx, payload)
+          log(ctx, payload)
           return Promise.resolve()
         },
       }
