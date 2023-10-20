@@ -74,7 +74,7 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
     },
 
     requestDidStart: ({ contextValue: { started, logger } }): Promise<GraphQLRequestListener<TContext>> => {
-      function audit(
+      function log(
         ctx: GraphQLRequestContextWillSendResponse<TContext>,
         subsequentPayload?: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult
       ) {
@@ -116,12 +116,12 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
       const responseListener: GraphQLRequestListener<TContext> = {
         willSendResponse(ctx: GraphQLRequestContextWillSendResponse<TContext>): Promise<void> {
           if (shouldIgnore?.(ctx)) return Promise.resolve()
-          audit(ctx)
+          log(ctx)
           return Promise.resolve()
         },
         willSendSubsequentPayload(ctx: GraphQLRequestContextWillSendSubsequentPayload<TContext>, payload): Promise<void> {
           if (shouldIgnore?.(ctx)) return Promise.resolve()
-          audit(ctx, payload)
+          log(ctx, payload)
           return Promise.resolve()
         },
       }
