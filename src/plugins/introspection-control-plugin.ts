@@ -1,5 +1,6 @@
-import { ApolloServerPlugin, GraphQLRequestContext, GraphQLRequestListener } from '@apollo/server'
-import { GraphQLContext, isIntrospectionQuery } from '@makerx/graphql-core'
+import type { ApolloServerPlugin, GraphQLRequestContext, GraphQLRequestListener } from '@apollo/server'
+import type { GraphQLContext } from '@makerx/graphql-core'
+import { isIntrospectionQuery } from '@makerx/graphql-core'
 import { isProduction } from '@makerx/node-common'
 
 export const introspectionControlPlugin: ApolloServerPlugin<GraphQLContext> = {

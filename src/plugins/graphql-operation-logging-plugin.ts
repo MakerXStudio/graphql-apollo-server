@@ -28,7 +28,7 @@ export interface GraphQLOperationLoggingPluginOptions<TContext extends GraphQLCo
    * If provided, this function will be called to determine whether to ignore logging for a given response
    */
   shouldIgnore?: (
-    ctx: GraphQLRequestContextWillSendResponse<TContext> | GraphQLRequestContextWillSendSubsequentPayload<TContext>
+    ctx: GraphQLRequestContextWillSendResponse<TContext> | GraphQLRequestContextWillSendSubsequentPayload<TContext>,
   ) => boolean
   /**
    * If true, introspection queries will not be logged (default: `true`)
@@ -76,7 +76,7 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
     requestDidStart: ({ contextValue: { started, logger } }): Promise<GraphQLRequestListener<TContext>> => {
       function log(
         ctx: GraphQLRequestContextWillSendResponse<TContext>,
-        subsequentPayload?: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult
+        subsequentPayload?: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
       ) {
         const { operationName, query, variables } = ctx.request
         const isIntrospection = query && isIntrospectionQuery(query)
@@ -92,8 +92,8 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
         let adjustedData = includeResponseData
           ? data
           : includeMutationResponseData && type === OperationTypeNode.MUTATION
-          ? data
-          : undefined
+            ? data
+            : undefined
         if (adjustResultData && adjustedData) adjustedData = adjustResultData(adjustedData)
 
         const adjustedResult = omitNil({ errors, data: adjustedData }) as Record<string, any>
