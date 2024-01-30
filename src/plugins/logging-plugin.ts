@@ -1,8 +1,9 @@
-import { GraphQLFormattedError } from 'graphql'
-import { ApolloServerPlugin, GraphQLRequestContextWillSendResponse, GraphQLRequestListener } from '@apollo/server'
-import { GraphQLRequestContextWillSendSubsequentPayload } from '@apollo/server/dist/esm/externalTypes/requestPipeline'
-import { GraphQLContext, logGraphQLOperation } from '@makerx/graphql-core'
+import type { ApolloServerPlugin, GraphQLRequestContextWillSendResponse, GraphQLRequestListener } from '@apollo/server'
+import type { GraphQLRequestContextWillSendSubsequentPayload } from '@apollo/server/dist/esm/externalTypes/requestPipeline'
+import type { GraphQLContext } from '@makerx/graphql-core'
+import { logGraphQLOperation } from '@makerx/graphql-core'
 import type { Logger } from '@makerx/node-common'
+import type { GraphQLFormattedError } from 'graphql'
 
 export interface GraphQLRequestInfo<TContext extends GraphQLContext<any, any, any>> {
   readonly requestContext: GraphQLRequestContextWillSendResponse<TContext>
@@ -29,7 +30,7 @@ export interface LoggingPluginOptions<TContext extends GraphQLContext<any, any, 
  * @deprecated use graphqlOperationLoggingPlugin() instead (more options, breaking changes)
  */
 export function createLoggingPlugin<TContext extends GraphQLContext<TLogger, any, any>, TLogger extends Logger = Logger>(
-  options: LoggingPluginOptions<TContext> = {}
+  options: LoggingPluginOptions<TContext> = {},
 ): ApolloServerPlugin<TContext> {
   return {
     requestDidStart: ({ contextValue: { started, logger } }): Promise<GraphQLRequestListener<TContext>> => {
