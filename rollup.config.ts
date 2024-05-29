@@ -1,29 +1,32 @@
 import nodeResolve from '@rollup/plugin-node-resolve'
 import typescript from '@rollup/plugin-typescript'
 import type { RollupOptions } from 'rollup'
-import pkg from './package.json' with { type: 'json' }
 
 const config: RollupOptions = {
-  input: 'src/index.ts',
+  input: ['src/index.ts'],
   output: [
     {
       dir: 'dist',
       format: 'cjs',
-      entryFileNames: '[name].cjs',
+      entryFileNames: '[name].js',
+      exports: 'named',
       preserveModules: true,
+      sourcemap: true,
     },
     {
       dir: 'dist',
       format: 'es',
+      exports: 'named',
       entryFileNames: '[name].mjs',
       preserveModules: true,
+      sourcemap: true,
     },
   ],
   treeshake: {
     moduleSideEffects: false,
     propertyReadSideEffects: false,
   },
-  external: [...Object.keys(pkg.dependencies ?? {}), ...Object.keys(pkg.peerDependencies ?? {})],
+  external: [/node_modules/],
   plugins: [
     typescript({
       tsconfig: 'tsconfig.build.json',
