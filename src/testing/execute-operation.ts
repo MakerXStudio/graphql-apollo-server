@@ -12,16 +12,6 @@ export type TypedGraphQLRequest<TData = Record<string, unknown>, TVariables exte
   query?: string | DocumentNode | TypedDocumentNode<TData, TVariables>
 }
 
-export type ExecuteOperation = <
-  TContext extends AnyGraphqlContext,
-  TContextFunction extends (...args: any) => Promise<TContext>,
-  TData = Record<string, unknown>,
-  TVariables extends VariableValues = VariableValues,
->(
-  request: TypedGraphQLRequest<TData, TVariables>,
-  ...createContextArgs: Parameters<TContextFunction>
-) => Promise<FormattedExecutionResult<TData>>
-
 export function buildExecuteOperation<TContext extends AnyGraphqlContext, TContextFunction extends (...args: any) => Promise<TContext>>(
   server: ApolloServer<TContext>,
   createContext: TContextFunction,

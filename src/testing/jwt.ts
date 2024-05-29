@@ -1,7 +1,7 @@
 import type { JwtPayload } from '@makerx/graphql-core'
 import { randomUUID } from 'node:crypto'
 
-interface BuildJwtInput {
+export interface BuildJwtInput {
   oid: string
   tid: string
   sub: string

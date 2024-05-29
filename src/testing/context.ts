@@ -1,7 +1,7 @@
 import { User, type GraphQLContext, type JwtPayload, type RequestInfo } from '@makerx/graphql-core'
 import type { Logger } from '@makerx/node-common'
 
-const requestInfo: RequestInfo = {
+const testRequestInfo: RequestInfo = {
   protocol: 'http',
   host: 'localhost',
   url: 'http://localhost/graphql',
@@ -10,7 +10,7 @@ const requestInfo: RequestInfo = {
   requestId: 'test-request',
 }
 
-const logger: Logger = {
+const noOpLogger: Logger = {
   debug: () => {},
   verbose: () => {},
   info: () => {},
@@ -21,8 +21,8 @@ const logger: Logger = {
 export async function createTestContext(jwtPayload?: JwtPayload): Promise<GraphQLContext> {
   const user = jwtPayload ? new User(jwtPayload, '') : undefined
   return {
-    logger,
-    requestInfo,
+    logger: noOpLogger,
+    requestInfo: testRequestInfo,
     user,
     started: Date.now(),
   }

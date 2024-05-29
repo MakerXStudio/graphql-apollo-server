@@ -1,3 +1,16 @@
 type Query {
+  """
+  Returns a hello message.
+  The `message` argument will be returned if supplied, otherwise the user's name or email will be used.
+  The caller must be logged in to run this query.
+  """
   hello(message: String): String!
+}
+
+type Mutation {
+  """
+  Runs an important operation.
+  The caller must have the `Admin` role to run this mutation.
+  """
+  important: String!
 }

@@ -51,3 +51,125 @@ Output includes:
 
 - Unauthorized requests are those that do not have a `user` set on the GraphQL context.
 - Production is determined according to `NODE_ENV === 'production'` via [node-common](https://github.com/MakerXStudio/node-common/blob/main/src/environment.ts)
+
+## Apollo Server test helpers
+
+Apollo Server v4 provides an `executeOperation` function to execute operations directly against the server instance without requiring an HTTP server or network calls. This is great for testing a GraphQL implementation with less overhead and more control.
+
+The `@makerx/graphql-apollo-server/testing` module provides some helper utilities to make testing Apollo Server easier.
+
+- `buildExecuteOperation` accepts an `ApolloServer` instance and context creation function and returns an `executeOperation` function which:
+  - is strongly typed to the GraphQL context
+  - accepts `TypedDocumentNode` operations to provide strong operation typing which works in conjunction with GraphQL codegen
+- `createTestContext` accepts a `JwtPayload` and returns a basic `GraphQLContext` which can be used in tests:
+  - `requestInfo` is set to a `testRequestInfo` constant
+  - `logger` is set to a no-op logger
+  - `User` is constructed using the specified `JwtPayload`
+- `buildJwt` creates a `JwtPayload` suitable for tests, using overridable random defaults
+
+### GraphQL testing example
+
+The following example demonstrates how to use the `buildExecuteOperation` to run strongly typed tests against an `ApolloServer` instance.
+
+> This example uses a basic `createTestContext` function, however your GraphQLContext will most likely be different and you may use a different context creation function for running tests vs normal runtime.
+
+#### test-context.ts
+
+This file provides a vitest test context that sets up an `ApolloServer` instance and provides an `executeOperation` function for running tests.
+
+```ts
+import { buildExecuteOperation, createTestContext } from '@makerx/graphql-apollo-server/testing'
+import type { GraphQLContext } from '@makerx/graphql-core'
+import { test as testBase } from 'vitest'
+import { createTestServer } from './server'
+
+interface TestContext {
+  executeOperation: ReturnType<typeof buildExecuteOperation<GraphQLContext, typeof createTestContext>>
+}
+
+export const test = testBase.extend<TestContext>({
+  // eslint-disable-next-line no-empty-pattern
+  executeOperation: async ({}, use) => {
+    // setup
+    const server = createTestServer<GraphQLContext>()
+    const executeOperation = buildExecuteOperation(server, createTestContext)
+    // test
+    await use(executeOperation)
+    // teardown
+    server.stop()
+  },
+})
+```
+
+#### Note on codegen
+
+For berevity, codegen config is not included in this sample, however the following tests assume that the `graphql` function is available and returns a `TypedDocumentNode` operation to provide strong typing. Refer to the [GraphQL-Codegen documentation](https://the-guild.dev/graphql/codegen/docs/getting-started) for more info.
+
+#### hello-query.test.ts
+
+```ts
+import { buildJwt } from '@makerx/graphql-apollo-server/testing'
+import { describe, expect } from 'vitest'
+import { graphql } from './gql'
+import { test } from './test-context'
+
+const helloQuery = graphql(`
+  query Hello($message: String) {
+    hello(message: $message)
+  }
+`)
+
+describe('hello query operation', () => {
+  test('anonymous calls fail', async ({ executeOperation }) => {
+    const result = await executeOperation({ query: helloQuery, variables: { message: 'world' } })
+    expect(result.errors?.[0]?.message).toBe('Not authenticated')
+  })
+
+  test('authenticated calls work', async ({ executeOperation }) => {
+    const result = await executeOperation({ query: helloQuery, variables: { message: 'world' } }, buildJwt())
+    expect(result.data?.hello).toBe('Hello, world!')
+  })
+
+  test('user name is returned', async ({ executeOperation }) => {
+    const result = await executeOperation({ query: helloQuery }, buildJwt({ name: 'Magda' }))
+    expect(result.data?.hello).toBe('Hello, Magda!')
+  })
+
+  test('user email is returned', async ({ executeOperation }) => {
+    const result = await executeOperation({ query: helloQuery }, buildJwt({ email: 'magda@magda.net' }))
+    expect(result.data?.hello).toBe('Hello, magda@magda.net!')
+  })
+})
+```
+
+#### important-mutation.test.ts
+
+```ts
+import { buildJwt } from '@makerx/graphql-apollo-server/testing'
+import { describe, expect } from 'vitest'
+import { graphql } from './gql'
+import { test } from './test-context'
+
+const importantMutation = graphql(`
+  mutation Important {
+    important
+  }
+`)
+
+describe('important mutation operation', () => {
+  test('anonymous calls fail', async ({ executeOperation }) => {
+    const result = await executeOperation({ query: importantMutation })
+    expect(result.errors?.[0]?.message).toBe('Not authorized')
+  })
+
+  test('non-admin calls fail', async ({ executeOperation }) => {
+    const result = await executeOperation({ query: importantMutation }, buildJwt({ roles: ['User'] }))
+    expect(result.errors?.[0]?.message).toBe('Not authorized')
+  })
+
+  test('admin calls work', async ({ executeOperation }) => {
+    const result = await executeOperation({ query: importantMutation }, buildJwt({ roles: ['Admin'] }))
+    expect(result.data?.important).toBe('Operation successful')
+  })
+})
+```

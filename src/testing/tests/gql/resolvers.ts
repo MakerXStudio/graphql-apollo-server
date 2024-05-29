@@ -1,5 +1,5 @@
-import type { GraphQLContext } from '@makerx/graphql-core'
-import type { GraphQLResolveInfo } from 'graphql'
+import { GraphQLResolveInfo } from 'graphql'
+import { GraphQLContext } from '@makerx/graphql-core'
 export type Maybe<T> = T | null
 export type InputMaybe<T> = Maybe<T>
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] }
@@ -16,8 +16,22 @@ export type Scalars = {
   Float: { input: number; output: number }
 }
 
+export type Mutation = {
+  __typename?: 'Mutation'
+  /**
+   * Runs an important operation.
+   * The caller must have the `Admin` role to run this mutation.
+   */
+  important: Scalars['String']['output']
+}
+
 export type Query = {
   __typename?: 'Query'
+  /**
+   * Returns a hello message.
+   * The `message` argument will be returned if supplied, otherwise the user's name or email will be used.
+   * The caller must be logged in to run this query.
+   */
   hello: Scalars['String']['output']
 }
 
@@ -94,6 +108,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>
+  Mutation: ResolverTypeWrapper<{}>
   Query: ResolverTypeWrapper<{}>
   String: ResolverTypeWrapper<Scalars['String']['output']>
 }
@@ -101,8 +116,16 @@ export type ResolversTypes = {
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output']
+  Mutation: {}
   Query: {}
   String: Scalars['String']['output']
+}
+
+export type MutationResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation'],
+> = {
+  important?: Resolver<ResolversTypes['String'], ParentType, ContextType>
 }
 
 export type QueryResolvers<
@@ -113,5 +136,6 @@ export type QueryResolvers<
 }
 
 export type Resolvers<ContextType = GraphQLContext> = {
+  Mutation?: MutationResolvers<ContextType>
   Query?: QueryResolvers<ContextType>
 }

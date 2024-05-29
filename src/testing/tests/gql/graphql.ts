@@ -16,8 +16,22 @@ export type Scalars = {
   Float: { input: number; output: number }
 }
 
+export type Mutation = {
+  __typename?: 'Mutation'
+  /**
+   * Runs an important operation.
+   * The caller must have the `Admin` role to run this mutation.
+   */
+  important: Scalars['String']['output']
+}
+
 export type Query = {
   __typename?: 'Query'
+  /**
+   * Returns a hello message.
+   * The `message` argument will be returned if supplied, otherwise the user's name or email will be used.
+   * The caller must be logged in to run this query.
+   */
   hello: Scalars['String']['output']
 }
 
@@ -30,6 +44,10 @@ export type HelloQueryVariables = Exact<{
 }>
 
 export type HelloQuery = { __typename?: 'Query'; hello: string }
+
+export type ImportantMutationVariables = Exact<{ [key: string]: never }>
+
+export type ImportantMutation = { __typename?: 'Mutation'; important: string }
 
 export const HelloDocument = {
   kind: 'Document',
@@ -64,3 +82,14 @@ export const HelloDocument = {
     },
   ],
 } as unknown as DocumentNode<HelloQuery, HelloQueryVariables>
+export const ImportantDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'Important' },
+      selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'important' } }] },
+    },
+  ],
+} as unknown as DocumentNode<ImportantMutation, ImportantMutationVariables>

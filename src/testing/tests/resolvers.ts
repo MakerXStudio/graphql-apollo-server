@@ -8,4 +8,10 @@ export const resolvers: Resolvers = {
       return `Hello, ${message}!`
     },
   },
+  Mutation: {
+    important: (_, __, { user }) => {
+      if (!user?.roles.includes('Admin')) throw new Error('Not authorized')
+      return 'Operation successful'
+    },
+  },
 }

@@ -1,6 +1,6 @@
 {
   "name": "@makerx/graphql-apollo-server",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": false,
   "description": "A set of MakerX plugins for Apollo Server",
   "author": "MakerX",
@@ -86,5 +86,8 @@
     "tsx": "4.11.0",
     "typescript": "5.4.5",
     "vitest": "1.6.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.18.0"
   }
 }
