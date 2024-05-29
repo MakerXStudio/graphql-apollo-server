@@ -4,7 +4,6 @@ import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestListener,
 } from '@apollo/server'
-import type { GraphQLRequestContextWillSendSubsequentPayload } from '@apollo/server/dist/esm/externalTypes/requestPipeline'
 import { isIntrospectionQuery, logGraphQLOperation, type GraphQLContext, type LoggerLogFunctions } from '@makerx/graphql-core'
 import type { Logger } from '@makerx/node-common'
 import { OperationTypeNode } from 'graphql'
@@ -27,9 +26,7 @@ export interface GraphQLOperationLoggingPluginOptions<TContext extends GraphQLCo
   /***
    * If provided, this function will be called to determine whether to ignore logging for a given response
    */
-  shouldIgnore?: (
-    ctx: GraphQLRequestContextWillSendResponse<TContext> | GraphQLRequestContextWillSendSubsequentPayload<TContext>,
-  ) => boolean
+  shouldIgnore?: (ctx: GraphQLRequestContextWillSendResponse<TContext>) => boolean
   /**
    * If true, introspection queries will not be logged (default: `true`)
    */
@@ -119,7 +116,7 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
           log(ctx)
           return Promise.resolve()
         },
-        willSendSubsequentPayload(ctx: GraphQLRequestContextWillSendSubsequentPayload<TContext>, payload): Promise<void> {
+        willSendSubsequentPayload(ctx: GraphQLRequestContextWillSendResponse<TContext>, payload): Promise<void> {
           if (shouldIgnore?.(ctx)) return Promise.resolve()
           log(ctx, payload)
           return Promise.resolve()

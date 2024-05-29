@@ -1,5 +1,4 @@
 import type { ApolloServerPlugin, GraphQLRequestContextWillSendResponse, GraphQLRequestListener } from '@apollo/server'
-import type { GraphQLRequestContextWillSendSubsequentPayload } from '@apollo/server/dist/esm/externalTypes/requestPipeline'
 import type { GraphQLContext } from '@makerx/graphql-core'
 import { logGraphQLOperation } from '@makerx/graphql-core'
 import type { Logger } from '@makerx/node-common'
@@ -62,7 +61,7 @@ export function createLoggingPlugin<TContext extends GraphQLContext<TLogger, any
           logIfNotIgnore(ctx, false)
           return Promise.resolve()
         },
-        willSendSubsequentPayload(ctx: GraphQLRequestContextWillSendSubsequentPayload<TContext>): Promise<void> {
+        willSendSubsequentPayload(ctx: GraphQLRequestContextWillSendResponse<TContext>): Promise<void> {
           logIfNotIgnore(ctx, false)
           return Promise.resolve()
         },
