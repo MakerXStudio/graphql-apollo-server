@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: read
-  packages: read
+  checks: write
 
 jobs:
   pull_request:
