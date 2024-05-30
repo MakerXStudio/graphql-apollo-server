@@ -178,7 +178,7 @@ describe('important mutation operation', () => {
 
 #### me-query.test.ts
 
-This test shows how the context input JWT payload can be easily controlled when operating underneath the HTTP layer where Bearer token validation and decoding would be required.
+This test shows how the context input JWT payload can be easily controlled when operating underneath the HTTP layer where Bearer token validation and decoding would normally be required.
 
 ```ts
 import { buildJwt } from '@makerx/graphql-apollo-server/testing'
