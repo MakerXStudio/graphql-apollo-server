@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     server: {
       deps: {
-        inline: ['@makerx/graphql-core', 'lodash'],
+        inline: ['@makerx/graphql-core'],
       },
     },
   },
