@@ -33,10 +33,21 @@ export type Query = {
    * The caller must be logged in to run this query.
    */
   hello: Scalars['String']['output']
+  /** Returns the current user or null if not logged in. */
+  me?: Maybe<User>
 }
 
 export type QueryHelloArgs = {
   message?: InputMaybe<Scalars['String']['input']>
+}
+
+/** A user of the system. */
+export type User = {
+  __typename?: 'User'
+  email?: Maybe<Scalars['String']['output']>
+  id: Scalars['ID']['output']
+  name?: Maybe<Scalars['String']['output']>
+  roles: Array<Scalars['String']['output']>
 }
 
 export type ResolverTypeWrapper<T> = Promise<T> | T
@@ -108,17 +119,21 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>
+  ID: ResolverTypeWrapper<Scalars['ID']['output']>
   Mutation: ResolverTypeWrapper<{}>
   Query: ResolverTypeWrapper<{}>
   String: ResolverTypeWrapper<Scalars['String']['output']>
+  User: ResolverTypeWrapper<User>
 }
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output']
+  ID: Scalars['ID']['output']
   Mutation: {}
   Query: {}
   String: Scalars['String']['output']
+  User: User
 }
 
 export type MutationResolvers<
@@ -133,9 +148,19 @@ export type QueryResolvers<
   ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query'],
 > = {
   hello?: Resolver<ResolversTypes['String'], ParentType, ContextType, Partial<QueryHelloArgs>>
+  me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>
+}
+
+export type UserResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
+  email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>
+  roles?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>
 }
 
 export type Resolvers<ContextType = GraphQLContext> = {
   Mutation?: MutationResolvers<ContextType>
   Query?: QueryResolvers<ContextType>
+  User?: UserResolvers<ContextType>
 }

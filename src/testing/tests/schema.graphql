@@ -5,6 +5,11 @@ type Query {
   The caller must be logged in to run this query.
   """
   hello(message: String): String!
+
+  """
+  Returns the current user or null if not logged in.
+  """
+  me: User
 }
 
 type Mutation {
@@ -13,4 +18,14 @@ type Mutation {
   The caller must have the `Admin` role to run this mutation.
   """
   important: String!
+}
+
+"""
+A user of the system.
+"""
+type User {
+  id: ID!
+  name: String
+  email: String
+  roles: [String!]!
 }

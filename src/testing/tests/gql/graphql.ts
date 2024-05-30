@@ -33,10 +33,21 @@ export type Query = {
    * The caller must be logged in to run this query.
    */
   hello: Scalars['String']['output']
+  /** Returns the current user or null if not logged in. */
+  me?: Maybe<User>
 }
 
 export type QueryHelloArgs = {
   message?: InputMaybe<Scalars['String']['input']>
+}
+
+/** A user of the system. */
+export type User = {
+  __typename?: 'User'
+  email?: Maybe<Scalars['String']['output']>
+  id: Scalars['ID']['output']
+  name?: Maybe<Scalars['String']['output']>
+  roles: Array<Scalars['String']['output']>
 }
 
 export type HelloQueryVariables = Exact<{
@@ -48,6 +59,13 @@ export type HelloQuery = { __typename?: 'Query'; hello: string }
 export type ImportantMutationVariables = Exact<{ [key: string]: never }>
 
 export type ImportantMutation = { __typename?: 'Mutation'; important: string }
+
+export type MeQueryVariables = Exact<{ [key: string]: never }>
+
+export type MeQuery = {
+  __typename?: 'Query'
+  me?: { __typename?: 'User'; id: string; name?: string | null; email?: string | null; roles: Array<string> } | null
+}
 
 export const HelloDocument = {
   kind: 'Document',
@@ -93,3 +111,31 @@ export const ImportantDocument = {
     },
   ],
 } as unknown as DocumentNode<ImportantMutation, ImportantMutationVariables>
+export const MeDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'Me' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'me' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'roles' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<MeQuery, MeQueryVariables>

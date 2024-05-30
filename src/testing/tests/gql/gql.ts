@@ -15,6 +15,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
 const documents = {
   '\n  query Hello($message: String) {\n    hello(message: $message)\n  }\n': types.HelloDocument,
   '\n  mutation Important {\n    important\n  }\n': types.ImportantDocument,
+  '\n  query Me {\n    me {\n      id\n      name\n      email\n      roles\n    }\n  }\n': types.MeDocument,
 }
 
 /**
@@ -43,6 +44,12 @@ export function graphql(
 export function graphql(
   source: '\n  mutation Important {\n    important\n  }\n',
 ): (typeof documents)['\n  mutation Important {\n    important\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query Me {\n    me {\n      id\n      name\n      email\n      roles\n    }\n  }\n',
+): (typeof documents)['\n  query Me {\n    me {\n      id\n      name\n      email\n      roles\n    }\n  }\n']
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {}
