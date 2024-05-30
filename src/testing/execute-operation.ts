@@ -12,6 +12,9 @@ export type TypedGraphQLRequest<TData = Record<string, unknown>, TVariables exte
   query?: string | DocumentNode | TypedDocumentNode<TData, TVariables>
 }
 
+/***
+ * Returns an `executeOperation` function for the provided ApolloServer instance and context creation function.
+ */
 export function buildExecuteOperation<TContext extends AnyGraphqlContext, TContextFunction extends (...args: any) => Promise<TContext>>(
   server: ApolloServer<TContext>,
   createContext: TContextFunction,
