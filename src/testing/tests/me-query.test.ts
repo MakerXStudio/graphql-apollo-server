@@ -1,5 +1,5 @@
 import { describe, expect } from 'vitest'
-import { buildJwt } from '../jwt'
+import { buildJwt, buildUserJwt } from '../jwt'
 import { graphql } from './gql'
 import { test } from './test-context'
 
@@ -15,9 +15,10 @@ const meQuery = graphql(`
 `)
 
 const jwtPayloads = {
-  basicUser: buildJwt(),
-  userWithRoles: buildJwt({ roles: ['Admin', 'Supervisor'] }),
-  userWithName: buildJwt({ name: 'Magda' }),
+  app: buildJwt(),
+  user: buildUserJwt(),
+  userWithRoles: buildUserJwt({ roles: ['Admin', 'Supervisor'] }),
+  userWithName: buildUserJwt({ name: 'Magda' }),
 }
 
 describe('me query operation', () => {
@@ -26,11 +27,18 @@ describe('me query operation', () => {
     expect(result.data?.me).toBeNull()
   })
 
-  test('returns basic user', async ({ executeOperation }) => {
-    const result = await executeOperation({ query: meQuery }, jwtPayloads.basicUser)
+  test('returns basic app (no email)', async ({ executeOperation }) => {
+    const result = await executeOperation({ query: meQuery }, jwtPayloads.app)
     expect(result.data?.me).toMatchObject({
-      id: jwtPayloads.basicUser.oid,
-      email: jwtPayloads.basicUser.email,
+      id: jwtPayloads.app.oid,
+    })
+  })
+
+  test('returns basic user (with email)', async ({ executeOperation }) => {
+    const result = await executeOperation({ query: meQuery }, jwtPayloads.user)
+    expect(result.data?.me).toMatchObject({
+      id: jwtPayloads.user.oid,
+      email: jwtPayloads.user.email,
     })
   })
 

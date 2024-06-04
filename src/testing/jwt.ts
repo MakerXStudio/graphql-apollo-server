@@ -11,11 +11,15 @@ export interface BuildJwtInput {
   [key: string]: any
 }
 
+/**
+ *
+ * @param Optional JWT input
+ * @returns A JWT payload with oid, tid and sub claims set to random values if not provided
+ */
 export function buildJwt({
   oid = randomUUID(),
   tid = randomUUID(),
   sub = randomUUID(),
-  email = randomEmail(),
   scopes = [],
   roles = [],
   ...rest
@@ -24,13 +28,24 @@ export function buildJwt({
     oid,
     tid,
     sub,
-    email,
     scp: scopes.join(' '),
     roles,
     ...rest,
   }
 }
 
+/**
+ *
+ * @param Optional JWT input
+ * @returns A JWT payload with oid, tid, sub and email claims set to random values if not provided
+ */
+export function buildUserJwt({ email = randomEmail(), ...rest }: Partial<BuildJwtInput> = {}): JwtPayload {
+  return buildJwt({
+    email,
+    ...rest,
+  })
+}
+
 export function randomEmail() {
-  return `${(Math.random() + 1).toString(36).substring(7)}@test.net`
+  return `${(Math.random() + 1).toString(36).substring(2)}@test.net`
 }
