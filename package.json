@@ -1,6 +1,6 @@
 {
   "name": "@makerx/graphql-apollo-server",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "private": false,
   "description": "A set of MakerX plugins for Apollo Server",
   "author": "MakerX",
