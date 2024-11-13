@@ -8,6 +8,5 @@
     "resolveJsonModule": true,
     "esModuleInterop": true
   },
-  "include": ["./**/*.ts"],
-  "exclude": ["src/testing/tests/gql/*.ts"]
+  "include": ["./**/*.ts"]
 }
