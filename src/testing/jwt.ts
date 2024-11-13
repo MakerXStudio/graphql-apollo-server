@@ -8,7 +8,7 @@ export interface BuildJwtInput {
   email: string
   scopes: string[]
   roles: string[]
-  [key: string]: any
+  [key: string]: unknown
 }
 
 /**

@@ -9,7 +9,11 @@ import type { Logger } from '@makerx/node-common'
 import { OperationTypeNode } from 'graphql'
 import { omitNil } from '../utils'
 
-export interface GraphQLOperationLoggingPluginOptions<TContext extends GraphQLContext<TLogger, any, any>, TLogger extends Logger = Logger> {
+export interface GraphQLOperationLoggingPluginOptions<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TContext extends GraphQLContext<TLogger, any, any>,
+  TLogger extends Logger = Logger,
+> {
   /**
    * This level will be used to log operations via the logging method of the specified key (default: `info`)
    */
@@ -42,21 +46,23 @@ export interface GraphQLOperationLoggingPluginOptions<TContext extends GraphQLCo
   /**
    * Can be used to adjust the variables before logging, e.g. redacting sensitive data
    */
-  adjustVariables?: (variables: Record<string, any>) => Record<string, any>
+  adjustVariables?: (variables: Record<string, unknown>) => Record<string, unknown>
   /**
    * Can be used to adjust the result data before logging, e.g. redacting sensitive data
    */
-  adjustResultData?: (data: Record<string, any>) => Record<string, any>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adjustResultData?: (data: Record<string, any>) => Record<string, unknown>
   /**
    * Can be used to augment the log entry with additional properties
    */
-  augmentLogEntry?: (ctx: TContext) => Record<string, any>
+  augmentLogEntry?: (ctx: TContext) => Record<string, unknown>
 }
 
 /**
  * This plugin logs GraphQL operations and context creation failure (if specified via options).
  * See options for more details.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TLogger, any, any>, TLogger extends Logger = Logger>({
   logLevel = 'info',
   contextCreationDidFail,
@@ -99,9 +105,11 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
             : undefined
         if (adjustResultData && adjustedData) adjustedData = adjustResultData(adjustedData)
 
-        const adjustedResult = omitNil({ errors, data: adjustedData }) as Record<string, any>
+        const adjustedResult = omitNil({ errors, data: adjustedData }) as Record<string, unknown>
 
-        const additionalLogEntryProperties = augmentLogEntry ? (omitNil(augmentLogEntry(contextValue)) as Record<string, any>) : undefined
+        const additionalLogEntryProperties = augmentLogEntry
+          ? (omitNil(augmentLogEntry(contextValue)) as Record<string, unknown>)
+          : undefined
 
         logGraphQLOperation({
           logger,

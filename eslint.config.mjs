@@ -24,6 +24,7 @@ export default [
       '**/generated/types.ts',
       '**/.idea',
       '**/.vscode',
+      '**/gql',
     ],
   },
   ...compat.extends('@makerx/eslint-config'),

@@ -3,7 +3,7 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core'
 import type { AnyGraphqlContext } from '@makerx/graphql-core'
 import type { DocumentNode, FormattedExecutionResult } from 'graphql'
 
-export type VariableValues = { [key: string]: any }
+export type VariableValues = { [key: string]: unknown }
 
 export type TypedGraphQLRequest<TData = Record<string, unknown>, TVariables extends VariableValues = VariableValues> = Omit<
   GraphQLRequest<TVariables>,
@@ -16,6 +16,7 @@ export type TypedGraphQLRequest<TData = Record<string, unknown>, TVariables exte
  * Returns an `executeOperation` function for the provided ApolloServer instance and context creation function.
  * The returned function accepts a GraphQL request as the first argument followed by context creation function arguments.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function buildExecuteOperation<TContext extends AnyGraphqlContext, TContextFunction extends (...args: any) => Promise<TContext>>(
   server: ApolloServer<TContext>,
   createContext: TContextFunction,
