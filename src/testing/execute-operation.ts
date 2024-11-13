@@ -3,7 +3,7 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core'
 import type { AnyGraphqlContext } from '@makerx/graphql-core'
 import type { DocumentNode, FormattedExecutionResult } from 'graphql'
 
-export type VariableValues = { [key: string]: unknown }
+export type VariableValues = { [key: string]: any }
 
 export type TypedGraphQLRequest<TData = Record<string, unknown>, TVariables extends VariableValues = VariableValues> = Omit<
   GraphQLRequest<TVariables>,
