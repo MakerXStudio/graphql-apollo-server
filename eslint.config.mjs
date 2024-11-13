@@ -29,6 +29,11 @@ export default [
   },
   ...compat.extends('@makerx/eslint-config'),
   {
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
     languageOptions: {
       globals: {
         ...globals.node,

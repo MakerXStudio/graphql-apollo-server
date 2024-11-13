@@ -4,14 +4,12 @@ import { logGraphQLOperation } from '@makerx/graphql-core'
 import type { Logger } from '@makerx/node-common'
 import type { GraphQLFormattedError } from 'graphql'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface GraphQLRequestInfo<TContext extends GraphQLContext<any, any, any>> {
   readonly requestContext: GraphQLRequestContextWillSendResponse<TContext>
   readonly isSubsequentPayload: boolean
   readonly formattedErrors?: ReadonlyArray<GraphQLFormattedError>
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface LoggingPluginOptions<TContext extends GraphQLContext<any, any, any>> {
   /***
    * If provided, this logger will be used to log context creation failures as errors
@@ -30,7 +28,6 @@ export interface LoggingPluginOptions<TContext extends GraphQLContext<any, any, 
 /**
  * @deprecated use graphqlOperationLoggingPlugin() instead (more options, breaking changes)
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createLoggingPlugin<TContext extends GraphQLContext<TLogger, any, any>, TLogger extends Logger = Logger>(
   options: LoggingPluginOptions<TContext> = {},
 ): ApolloServerPlugin<TContext> {

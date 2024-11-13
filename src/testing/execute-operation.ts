@@ -16,7 +16,6 @@ export type TypedGraphQLRequest<TData = Record<string, unknown>, TVariables exte
  * Returns an `executeOperation` function for the provided ApolloServer instance and context creation function.
  * The returned function accepts a GraphQL request as the first argument followed by context creation function arguments.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function buildExecuteOperation<TContext extends AnyGraphqlContext, TContextFunction extends (...args: any) => Promise<TContext>>(
   server: ApolloServer<TContext>,
   createContext: TContextFunction,
