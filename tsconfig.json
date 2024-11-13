@@ -8,5 +8,5 @@
     "resolveJsonModule": true,
     "esModuleInterop": true
   },
-  "include": ["./**/*.ts"]
+  "include": ["src/**/*.ts","scripts/**/*.ts", "examples/**/*.ts", "rollup.config.ts"]
 }

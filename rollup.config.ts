@@ -1,9 +1,11 @@
 import nodeResolve from '@rollup/plugin-node-resolve'
+import commonjs from '@rollup/plugin-commonjs'
 import typescript from '@rollup/plugin-typescript'
+import json from '@rollup/plugin-json'
 import type { RollupOptions } from 'rollup'
 
 const config: RollupOptions = {
-  input: ['src/index.ts', 'src/testing/index.ts'],
+  input: ['src/index.ts'],
   output: [
     {
       dir: 'dist',
@@ -31,7 +33,9 @@ const config: RollupOptions = {
     typescript({
       tsconfig: 'tsconfig.build.json',
     }),
+    commonjs(),
     nodeResolve(),
+    json(),
   ],
 }
 
