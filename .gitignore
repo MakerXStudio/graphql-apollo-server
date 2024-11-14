@@ -44,7 +44,6 @@ node_modules/
 
 # Compiled code
 dist/
-dist-old/
 build/
 
 # Coverage report

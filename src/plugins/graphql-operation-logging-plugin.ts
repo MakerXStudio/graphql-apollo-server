@@ -47,6 +47,10 @@ export interface GraphQLOperationLoggingPluginOptions<TContext extends GraphQLCo
    * Can be used to adjust the result data before logging, e.g. redacting sensitive data
    */
   adjustResultData?: (data: Record<string, any>) => Record<string, any>
+  /**
+   * Can be used to augment the log entry with additional properties
+   */
+  augmentLogEntry?: (ctx: TContext) => Record<string, any>
 }
 
 /**
@@ -63,6 +67,7 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
   includeMutationResponseData,
   adjustVariables,
   adjustResultData,
+  augmentLogEntry,
 }: GraphQLOperationLoggingPluginOptions<TContext, TLogger> = {}): ApolloServerPlugin<TContext> {
   return {
     contextCreationDidFail: async ({ error }) => {
@@ -70,11 +75,12 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
       await contextCreationDidFail?.({ error })
     },
 
-    requestDidStart: ({ contextValue: { started, logger } }): Promise<GraphQLRequestListener<TContext>> => {
+    requestDidStart: ({ contextValue }): Promise<GraphQLRequestListener<TContext>> => {
       function log(
         ctx: GraphQLRequestContextWillSendResponse<TContext>,
         subsequentPayload?: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
       ) {
+        const { started, logger } = contextValue
         const { operationName, query, variables } = ctx.request
         const isIntrospection = query && isIntrospectionQuery(query)
         if (isIntrospection && ignoreIntrospectionQueries) return
@@ -95,6 +101,8 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
 
         const adjustedResult = omitNil({ errors, data: adjustedData }) as Record<string, any>
 
+        const additionalLogEntryProperties = augmentLogEntry ? (omitNil(augmentLogEntry(contextValue)) as Record<string, any>) : undefined
+
         logGraphQLOperation({
           logger,
           logLevel,
@@ -107,6 +115,7 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
           isIntrospectionQuery: isIntrospection || undefined,
           isIncrementalResponse: ctx.response.body.kind === 'incremental' || undefined,
           isSubsequentPayload: !!subsequentPayload || undefined,
+          ...additionalLogEntryProperties,
         })
       }
 
