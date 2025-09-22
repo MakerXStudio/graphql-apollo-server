@@ -11,8 +11,14 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * 3. It does not support dead code elimination, so it will add unused operations.
  *
  * Therefore it is highly recommended to use the babel or swc plugin for production.
+ * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
-const documents = {
+type Documents = {
+  '\n  query Hello($message: String) {\n    hello(message: $message)\n  }\n': typeof types.HelloDocument
+  '\n  mutation Important {\n    important\n  }\n': typeof types.ImportantDocument
+  '\n  query Me {\n    me {\n      id\n      name\n      email\n      roles\n    }\n  }\n': typeof types.MeDocument
+}
+const documents: Documents = {
   '\n  query Hello($message: String) {\n    hello(message: $message)\n  }\n': types.HelloDocument,
   '\n  mutation Important {\n    important\n  }\n': types.ImportantDocument,
   '\n  query Me {\n    me {\n      id\n      name\n      email\n      roles\n    }\n  }\n': types.MeDocument,
