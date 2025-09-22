@@ -1,13 +1,13 @@
 {
   "name": "@makerx/graphql-apollo-server",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "private": false,
   "description": "A set of MakerX plugins for Apollo Server",
   "author": "MakerX",
   "license": "MIT",
   "type": "module",
   "engines": {
-    "node": ">=18.0"
+    "node": ">=22.0"
   },
   "bugs": {
     "url": "https://github.com/MakerXStudio/graphql-apollo-server/issues"
@@ -56,11 +56,11 @@
     "@makerx/ts-toolkit": "4.0.0-beta.24",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.4",
-    "@tsconfig/node20": "^20.1.6",
+    "@tsconfig/node22": "^22.0.2",
     "@types/lodash.omit": "^4.5.9",
     "@types/node": "24.5.2",
-    "@typescript-eslint/eslint-plugin": "^8.44.0",
-    "@typescript-eslint/parser": "^8.44.0",
+    "@typescript-eslint/eslint-plugin": "^8.44.1",
+    "@typescript-eslint/parser": "^8.44.1",
     "@vitest/coverage-v8": "3.2.4",
     "better-npm-audit": "^3.11.0",
     "copyfiles": "^2.4.1",
