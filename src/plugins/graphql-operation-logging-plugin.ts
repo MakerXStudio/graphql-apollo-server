@@ -51,6 +51,10 @@ export interface GraphQLOperationLoggingPluginOptions<TContext extends GraphQLCo
    * Can be used to augment the log entry with additional properties
    */
   augmentLogEntry?: (ctx: TContext) => Record<string, any>
+  /**
+   * Can be used to resolve a custom logger for the plugin
+   */
+  resolveCustomLogger?: (context: TContext) => TLogger
 }
 
 /**
@@ -68,6 +72,7 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
   adjustVariables,
   adjustResultData,
   augmentLogEntry,
+  resolveCustomLogger,
 }: GraphQLOperationLoggingPluginOptions<TContext, TLogger> = {}): ApolloServerPlugin<TContext> {
   return {
     contextCreationDidFail: async ({ error }) => {
@@ -80,7 +85,10 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
         ctx: GraphQLRequestContextWillSendResponse<TContext>,
         subsequentPayload?: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
       ) {
-        const { started, logger } = contextValue
+        const { started } = contextValue
+        const { logger } = resolveCustomLogger
+          ? { logger: resolveCustomLogger(contextValue) }
+          : contextValue
         const { operationName, query, variables } = ctx.request
         const isIntrospection = query && isIntrospectionQuery(query)
         if (isIntrospection && ignoreIntrospectionQueries) return
