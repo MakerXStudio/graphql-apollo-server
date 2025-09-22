@@ -86,9 +86,7 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
         subsequentPayload?: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
       ) {
         const { started } = contextValue
-        const { logger } = resolveCustomLogger
-          ? { logger: resolveCustomLogger(contextValue) }
-          : contextValue
+        const { logger } = resolveCustomLogger ? { logger: resolveCustomLogger(contextValue) } : contextValue
         const { operationName, query, variables } = ctx.request
         const isIntrospection = query && isIntrospectionQuery(query)
         if (isIntrospection && ignoreIntrospectionQueries) return
