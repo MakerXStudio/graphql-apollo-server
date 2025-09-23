@@ -52,9 +52,9 @@ export interface GraphQLOperationLoggingPluginOptions<TContext extends GraphQLCo
    */
   augmentLogEntry?: (ctx: TContext) => Record<string, any>
   /**
-   * Can be used to resolve a custom logger for the plugin
+   * Can be used to resolve a logger for the plugin
    */
-  resolveCustomLogger?: (context: TContext) => TLogger
+  resolveLogger?: (context: TContext) => TLogger
 }
 
 /**
@@ -72,7 +72,7 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
   adjustVariables,
   adjustResultData,
   augmentLogEntry,
-  resolveCustomLogger,
+  resolveLogger: resolveCustomLogger,
 }: GraphQLOperationLoggingPluginOptions<TContext, TLogger> = {}): ApolloServerPlugin<TContext> {
   return {
     contextCreationDidFail: async ({ error }) => {
