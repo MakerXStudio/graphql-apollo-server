@@ -52,7 +52,7 @@ export interface GraphQLOperationLoggingPluginOptions<TContext extends GraphQLCo
    */
   augmentLogEntry?: (ctx: TContext) => Record<string, any>
   /**
-   * Can be used to resolve a custom logger for the plugin
+   * Can be used to resolve a logger for the plugin
    */
   resolveLogger?: (context: TContext) => TLogger
 }
