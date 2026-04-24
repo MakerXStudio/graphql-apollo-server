@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
   checks: write
+  id-token: write
 
 jobs:
   ci:
@@ -20,6 +21,7 @@ jobs:
 
   publish:
     needs: ci
-    uses: makerxstudio/shared-config/.github/workflows/node-publish-public.yml@main
-    secrets:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    uses: makerxstudio/shared-config/.github/workflows/node-trusted-publish.yml@main
+    with:
+      access: public
+      tag: beta

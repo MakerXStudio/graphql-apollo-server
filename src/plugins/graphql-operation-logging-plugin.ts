@@ -1,6 +1,6 @@
 import type {
   ApolloServerPlugin,
-  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestListener,
 } from '@apollo/server'
@@ -83,7 +83,7 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
     requestDidStart: ({ contextValue }): Promise<GraphQLRequestListener<TContext>> => {
       function log(
         ctx: GraphQLRequestContextWillSendResponse<TContext>,
-        subsequentPayload?: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
+        subsequentPayload?: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
       ) {
         const { started } = contextValue
         const { logger } = resolveCustomLogger ? { logger: resolveCustomLogger(contextValue) } : contextValue
@@ -131,7 +131,10 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
           log(ctx)
           return Promise.resolve()
         },
-        willSendSubsequentPayload(ctx: GraphQLRequestContextWillSendResponse<TContext>, payload): Promise<void> {
+        willSendSubsequentPayload(
+          ctx: GraphQLRequestContextWillSendResponse<TContext>,
+          payload: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
+        ): Promise<void> {
           if (shouldIgnore?.(ctx)) return Promise.resolve()
           log(ctx, payload)
           return Promise.resolve()
