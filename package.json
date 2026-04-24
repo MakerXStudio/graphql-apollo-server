@@ -33,8 +33,7 @@
     "build:3-build": "rollup -c --configPlugin typescript",
     "build:4-copy-pkg-json": "tstk copy-package-json -c",
     "build:5-copy-readme": "copyfiles ./README.md ./dist",
-    "build:6-fix-dual-exports": "node scripts/fix-dual-exports.mjs",
-    "build:7-check-exports": "attw --pack dist",
+    "build:6-check-exports": "attw --pack dist",
     "format": "prettier --write ."
   },
   "peerDependencies": {
@@ -55,7 +54,7 @@
     "@makerx/eslint-config": "4.2.0",
     "@makerx/prettier-config": "2.0.1",
     "@makerx/ts-config": "^1.0.1",
-    "@makerx/ts-toolkit": "4.0.0-beta.24",
+    "@makerx/ts-toolkit": "^5.0.0-beta.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-typescript": "^12.3.0",
     "@tsconfig/node20": "^20.1.9",
