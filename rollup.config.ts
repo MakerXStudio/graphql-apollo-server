@@ -1,6 +1,9 @@
 import nodeResolve from '@rollup/plugin-node-resolve'
 import typescript from '@rollup/plugin-typescript'
+import { isAbsolute } from 'node:path'
 import type { RollupOptions } from 'rollup'
+
+const isBareModuleImport = (id: string, importer: string | undefined) => importer !== undefined && !id.startsWith('.') && !isAbsolute(id)
 
 const config: RollupOptions = {
   input: ['src/index.ts', 'src/testing/index.ts'],
@@ -12,6 +15,7 @@ const config: RollupOptions = {
       exports: 'named',
       preserveModules: true,
       sourcemap: true,
+      interop: 'auto',
     },
     {
       dir: 'dist',
@@ -26,7 +30,7 @@ const config: RollupOptions = {
     moduleSideEffects: false,
     propertyReadSideEffects: false,
   },
-  external: [/node_modules/],
+  external: isBareModuleImport,
   plugins: [
     typescript({
       tsconfig: 'tsconfig.build.json',
