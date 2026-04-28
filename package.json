@@ -39,7 +39,7 @@
   "peerDependencies": {
     "@apollo/server": ">=4",
     "@graphql-typed-document-node/core": ">=3.2.0",
-    "@makerx/graphql-core": ">=2",
+    "@makerx/graphql-core": ">=1",
     "@makerx/node-common": ">=1",
     "graphql": ">=16"
   },
