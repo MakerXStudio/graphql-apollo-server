@@ -73,8 +73,3 @@ export function createLoggingPlugin<TContext extends GraphQLContext<TLogger, any
       (({ error }) => Promise.resolve(options.contextCreationFailureLogger?.error('Context creation failed', { error }))),
   }
 }
-
-/**
- * @deprecated use createLoggingPlugin() directly instead
- */
-export const loggingPlugin: ApolloServerPlugin<GraphQLContext> = createLoggingPlugin()
