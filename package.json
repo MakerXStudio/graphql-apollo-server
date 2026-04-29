@@ -24,7 +24,7 @@
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:ci": "vitest run --coverage --reporter junit --outputFile test-results.xml",
+    "test:ci": "vitest run --pass-with-no-tests --coverage --reporter junit --outputFile test-results.xml",
     "codegen": "graphql-codegen --config codegen-testing.ts",
     "build": "run-s build:*",
     "build:0-clean": "rimraf dist coverage",
