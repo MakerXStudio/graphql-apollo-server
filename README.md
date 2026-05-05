@@ -58,62 +58,111 @@ Apollo Server v4 introduced an `executeOperation` function to enable operations 
 
 Bypassing the HTTP stack supports complete control over JWT payloads and other operation context inputs required to set up complex test scenarios.
 
-The `@makerx/graphql-apollo-server/testing` module supports testing your GraphQL implementation using this method:
+The `@makerx/graphql-apollo-server/testing` module exports `buildExecuteOperation`, which accepts an `ApolloServer` instance and a context creation function and returns an `executeOperation` function which:
 
-- `buildExecuteOperation` accepts an `ApolloServer` instance and context creation function and returns an `executeOperation` function which:
-  - is strongly typed to the GraphQL context
-  - accepts `TypedDocumentNode` operations to provide strong operation typing
-- `createTestContext` accepts a `JwtPayload` and returns a basic `GraphQLContext` which can be used in tests:
-  - `requestInfo` is set to a `testRequestInfo` constant
-  - `logger` is set to a no-op logger
-  - `User` is constructed using the specified `JwtPayload`
-- `buildJwt` creates a `JwtPayload` suitable for tests, using overridable random defaults
+- is strongly typed to the GraphQL context
+- accepts `TypedDocumentNode` operations to provide strong operation typing
+- forwards any additional arguments to the supplied context creation function
 
-### GraphQL testing example
+The shape of the context creation function — and the JWT/user factories used to drive it — depends on your GraphQL implementation, so the examples below illustrate one common pattern using [Vitest test contexts](https://vitest.dev/guide/test-context).
 
-The following example demonstrates how to use the `buildExecuteOperation` to run strongly typed tests against an `ApolloServer` instance.
+### Vitest auth context example
 
-> The example uses a basic `createTestContext` function, it can be replaced with your own context creation function, which may be different for tests vs normal runtime.
+Note: exact shape depends on your auth implementation.
 
-The complete source code for this sample is available in the [src/testing/tests](./src/testing/tests/) directory.
-
-Refer to the [GraphQL-Codegen documentation](https://the-guild.dev/graphql/codegen/docs/getting-started) for info on generating strongly typed operations.
-
-#### test-context.ts
-
-This file provides a [Vitest test context](https://vitest.dev/guide/test-context) which sets up an `ApolloServer` instance and provides the `executeOperation` function to tests.
+`test/auth.ts`
 
 ```ts
-import { buildExecuteOperation, createTestContext } from '@makerx/graphql-apollo-server/testing'
-import type { GraphQLContext } from '@makerx/graphql-core'
-import { test as testBase } from 'vitest'
-import { createTestServer } from './server'
-
-interface TestContext {
-  executeOperation: ReturnType<typeof buildExecuteOperation<GraphQLContext, typeof createTestContext>>
+export interface BuildJwtInput {
+  oid: string
+  tid: string
+  sub: string
+  iss: string
+  aud: string | string[]
+  email: string
+  name: string
+  scopes: string[]
+  roles: string[]
+  idtyp?: string | 'app'
 }
 
-export const test = testBase.extend<TestContext>({
-  // eslint-disable-next-line no-empty-pattern
-  executeOperation: async ({}, use) => {
-    // setup
-    const server = createTestServer<GraphQLContext>()
-    const executeOperation = buildExecuteOperation(server, createTestContext)
-    // test
-    await use(executeOperation)
-    // teardown
-    server.stop()
-  },
+const buildJwt = ({
+  oid = randomUUID(),
+  tid = randomUUID(),
+  sub = randomUUID(),
+  iss = randomUUID(),
+  aud = randomUUID(),
+  email = faker.internet.email(),
+  name = faker.person.fullName(),
+  scopes = [],
+  roles = [],
+  ...rest
+}: Partial<BuildJwtInput> = {}): JwtPayload => ({
+  oid,
+  tid,
+  sub,
+  iss,
+  aud,
+  email,
+  name,
+  scp: scopes.join(' '),
+  roles,
+  ...rest,
+})
+
+const buildUserJwt = (input: Partial<BuildJwtInput> = {}): JwtPayload => buildJwt({ ...input, roles: [UserRoles.User] })
+const buildSystemAdminJwt = (input: Partial<BuildJwtInput> = {}): JwtPayload => buildJwt({ ...input, roles: [UserRoles.SystemAdmin] })
+
+export const test = baseTest.extend('auth', {
+  buildJwt,
+  buildUserJwt,
+  buildSystemAdminJwt,
 })
 ```
 
-#### hello-query.test.ts
+### Vitest GraphQL context example
+
+Note: extend auth context or other context as required.
+
+`test/graphql.ts`
 
 ```ts
-import { buildJwt } from '@makerx/graphql-apollo-server/testing'
+import { test as baseTest } from './auth'
+
+const requestInfo: RequestInfo = {
+  source: 'http',
+  protocol: 'http',
+  baseUrl: 'http://localhost',
+  host: 'localhost',
+  url: '/graphql',
+  method: 'TEST',
+  origin: 'vitest',
+  requestId: 'test',
+}
+
+const createContext = async (jwtPayload?: JwtPayload): Promise<GraphQLContext> => {
+  const user = await findUpdateOrCreateUser(jwtPayload, randomUUID())
+  const baseContext: BaseContext = { user, logger, requestInfo, started: Date.now() }
+  const extraContext = await augmentContext(baseContext)
+  return { ...baseContext, ...extraContext }
+}
+
+export const test = baseTest.extend('executeOperation', { scope: 'worker' }, async ({}, { onCleanup }) => {
+  const schema = createSchema()
+  const server = new ApolloServer<GraphQLContext>({ schema })
+  onCleanup(() => server.stop())
+  return buildExecuteOperation(server, createContext)
+})
+```
+
+### hello-query.test.ts
+
+The test files below use the `graphql` template-literal tag from [GraphQL-Codegen](https://the-guild.dev/graphql/codegen/docs/getting-started) to produce strongly typed operations.
+
+```ts
 import { describe, expect } from 'vitest'
 import { graphql } from './gql'
-import { test } from './test-context'
+import { test } from './graphql'
 
 const helloQuery = graphql(`
   query Hello($message: String) {
@@ -127,30 +176,29 @@ describe('hello query operation', () => {
     expect(result.errors?.[0]?.message).toBe('Not authenticated')
   })
 
-  test('authenticated calls work', async ({ executeOperation }) => {
-    const result = await executeOperation({ query: helloQuery, variables: { message: 'world' } }, buildJwt())
+  test('authenticated calls work', async ({ executeOperation, buildUserJwt }) => {
+    const result = await executeOperation({ query: helloQuery, variables: { message: 'world' } }, buildUserJwt())
     expect(result.data?.hello).toBe('Hello, world!')
   })
 
-  test('user name is returned', async ({ executeOperation }) => {
-    const result = await executeOperation({ query: helloQuery }, buildJwt({ name: 'Magda' }))
+  test('user name is returned', async ({ executeOperation, buildUserJwt }) => {
+    const result = await executeOperation({ query: helloQuery }, buildUserJwt({ name: 'Magda' }))
     expect(result.data?.hello).toBe('Hello, Magda!')
   })
 
-  test('user email is returned', async ({ executeOperation }) => {
-    const result = await executeOperation({ query: helloQuery }, buildJwt({ email: 'magda@magda.net' }))
+  test('user email is returned', async ({ executeOperation, buildUserJwt }) => {
+    const result = await executeOperation({ query: helloQuery }, buildUserJwt({ email: 'magda@magda.net' }))
     expect(result.data?.hello).toBe('Hello, magda@magda.net!')
   })
 })
 ```
 
-#### important-mutation.test.ts
+### important-mutation.test.ts
 
 ```ts
-import { buildJwt } from '@makerx/graphql-apollo-server/testing'
 import { describe, expect } from 'vitest'
 import { graphql } from './gql'
-import { test } from './test-context'
+import { test } from './graphql'
 
 const importantMutation = graphql(`
   mutation Important {
@@ -164,27 +212,26 @@ describe('important mutation operation', () => {
     expect(result.errors?.[0]?.message).toBe('Not authorized')
   })
 
-  test('non-admin calls fail', async ({ executeOperation }) => {
-    const result = await executeOperation({ query: importantMutation }, buildJwt({ roles: ['User'] }))
+  test('non-admin calls fail', async ({ executeOperation, buildUserJwt }) => {
+    const result = await executeOperation({ query: importantMutation }, buildUserJwt())
     expect(result.errors?.[0]?.message).toBe('Not authorized')
   })
 
-  test('admin calls work', async ({ executeOperation }) => {
-    const result = await executeOperation({ query: importantMutation }, buildJwt({ roles: ['Admin'] }))
+  test('admin calls work', async ({ executeOperation, buildSystemAdminJwt }) => {
+    const result = await executeOperation({ query: importantMutation }, buildSystemAdminJwt())
     expect(result.data?.important).toBe('Operation successful')
   })
 })
 ```
 
-#### me-query.test.ts
+### me-query.test.ts
 
 This test shows how the context input JWT payload can be easily controlled when operating underneath the HTTP layer where Bearer token validation and decoding would normally be required.
 
 ```ts
-import { buildJwt } from '@makerx/graphql-apollo-server/testing'
 import { describe, expect } from 'vitest'
 import { graphql } from './gql'
-import { test } from './test-context'
+import { test } from './graphql'
 
 const meQuery = graphql(`
   query Me {
@@ -197,41 +244,38 @@ const meQuery = graphql(`
   }
 `)
 
-const jwtPayloads = {
-  basicUser: buildJwt(),
-  userWithRoles: buildJwt({ roles: ['Admin', 'Supervisor'] }),
-  userWithName: buildJwt({ name: 'Magda' }),
-}
-
 describe('me query operation', () => {
   test('anonymous calls return null', async ({ executeOperation }) => {
     const result = await executeOperation({ query: meQuery })
     expect(result.data?.me).toBeNull()
   })
 
-  test('returns basic user', async ({ executeOperation }) => {
-    const result = await executeOperation({ query: meQuery }, jwtPayloads.basicUser)
+  test('returns basic user', async ({ executeOperation, buildUserJwt }) => {
+    const jwt = buildUserJwt()
+    const result = await executeOperation({ query: meQuery }, jwt)
     expect(result.data?.me).toMatchObject({
-      id: jwtPayloads.basicUser.oid,
-      email: jwtPayloads.basicUser.email,
+      id: jwt.oid,
+      email: jwt.email,
     })
   })
 
-  test('returns user roles', async ({ executeOperation }) => {
-    const result = await executeOperation({ query: meQuery }, jwtPayloads.userWithRoles)
+  test('returns user roles', async ({ executeOperation, buildJwt }) => {
+    const jwt = buildJwt({ roles: ['Admin', 'Supervisor'] })
+    const result = await executeOperation({ query: meQuery }, jwt)
     expect(result.data?.me).toMatchObject({
-      id: jwtPayloads.userWithRoles.oid,
-      email: jwtPayloads.userWithRoles.email,
-      roles: jwtPayloads.userWithRoles.roles,
+      id: jwt.oid,
+      email: jwt.email,
+      roles: jwt.roles,
     })
   })
 
-  test('returns user name', async ({ executeOperation }) => {
-    const result = await executeOperation({ query: meQuery }, jwtPayloads.userWithName)
+  test('returns user name', async ({ executeOperation, buildUserJwt }) => {
+    const jwt = buildUserJwt({ name: 'Magda' })
+    const result = await executeOperation({ query: meQuery }, jwt)
     expect(result.data?.me).toMatchObject({
-      id: jwtPayloads.userWithName.oid,
-      email: jwtPayloads.userWithName.email,
-      name: jwtPayloads.userWithName.name,
+      id: jwt.oid,
+      email: jwt.email,
+      name: jwt.name,
     })
   })
 })
