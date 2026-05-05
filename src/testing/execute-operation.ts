@@ -17,17 +17,19 @@ export type TypedGraphQLRequest<TData = Record<string, unknown>, TVariables exte
  * The returned function accepts a GraphQL request as the first argument followed by context creation function arguments.
  */
 export function buildExecuteOperation<TContext extends AnyGraphqlContext, TContextFunction extends (...args: any) => Promise<TContext>>(
-  server: ApolloServer<TContext>,
+  server: ApolloServer<TContext> | (() => Promise<ApolloServer<TContext>>),
   createContext: TContextFunction,
 ) {
   return async function executeOperation<TData = Record<string, unknown>, TVariables extends VariableValues = VariableValues>(
     request: TypedGraphQLRequest<TData, TVariables>,
     ...createContextArgs: Parameters<TContextFunction>
   ): Promise<FormattedExecutionResult<TData>> {
-    const response = await server.executeOperation(request, {
+    const resolvedServer = typeof server === 'function' ? await server() : server
+    const response = await resolvedServer.executeOperation(request, {
       contextValue: await createContext(...createContextArgs),
     })
-    if (response.body.kind !== 'single') throw new Error('Incremental responses are not supported by this testing utility function')
+    if (response.body.kind !== 'single')
+      throw new Error('Incremental responses are not supported by the buildExecuteOperation testing utility function')
     return response.body.singleResult as FormattedExecutionResult<TData>
   }
 }
