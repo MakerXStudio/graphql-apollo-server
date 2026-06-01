@@ -1,6 +1,2 @@
 {
-  "GHSA-w5hq-g745-h8pq": {
-    "active": true,
-    "notes": "uuid <14 buffer bounds check in v3/v5/v6 with buf arg. @apollo/server only uses v4() (landing page nonce, schema reporting bootId), so unreachable. Revisit when @apollo/server bumps uuid."
-  }
 }
