@@ -55,6 +55,10 @@ export interface GraphQLOperationLoggingPluginOptions<TContext extends GraphQLCo
    * Can be used to resolve a logger for the plugin
    */
   resolveLogger?: (context: TContext) => TLogger
+  /**
+   * Can be used to adjust the query before logging
+   */
+  adjustQuery?: (query?: string) => string | null
 }
 
 /**
@@ -73,6 +77,7 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
   adjustResultData,
   augmentLogEntry,
   resolveLogger: resolveCustomLogger,
+  adjustQuery,
 }: GraphQLOperationLoggingPluginOptions<TContext, TLogger> = {}): ApolloServerPlugin<TContext> {
   return {
     contextCreationDidFail: async ({ error }) => {
@@ -114,7 +119,7 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
           logLevel,
           type,
           operationName,
-          query,
+          query: adjustQuery ? adjustQuery(query) : query,
           started,
           variables: adjustedVariables && Object.keys(adjustedVariables).length > 0 ? adjustedVariables : undefined,
           result: Object.keys(adjustedResult).length ? adjustedResult : undefined,

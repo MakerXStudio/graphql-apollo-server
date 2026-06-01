@@ -21,6 +21,7 @@ Logging of context creation failure can be enabled by supplying a logger to the 
 - `includeMutationResponseData`: if `true`, the operation's `result.data` will be included in the log output for mutations only (default: `false`)
 - `adjustVariables`: an optional callback that can be used to adjust the operation's `variables` before logging
 - `adjustResultData`: an optional callback that can be used to adjust the operation's `result.data` before logging
+- `adjustQuery`: an optional callback that can be used to adjust the operation's query before logging
 
 ```ts
 const plugins: ApolloServerPlugin<GraphQLContext>[] = [
