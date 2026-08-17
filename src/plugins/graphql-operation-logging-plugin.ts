@@ -6,7 +6,6 @@ import type {
 } from '@apollo/server'
 import {
   collectDeprecatedElementUsage,
-  DEFAULT_MAX_ELEMENTS,
   isIntrospectionQuery,
   logGraphQLOperation,
   type DeprecatedElementUsage,
@@ -71,6 +70,9 @@ export interface GraphQLOperationLoggingPluginOptions<TContext extends GraphQLCo
    * If true, the `@deprecated` schema elements the operation used will be logged as
    * `deprecatedElements`, so you can tell whether a deprecated element is safe to remove.
    * The key is omitted when the operation used none.
+   *
+   * When a limit stops collection early the entry also carries `deprecatedElementsTruncated: true`,
+   * meaning the list may be incomplete and absence from it does not prove an element is unused.
    */
   includeDeprecatedElements?: boolean
   /**
@@ -82,8 +84,7 @@ export interface GraphQLOperationLoggingPluginOptions<TContext extends GraphQLCo
    */
   maxVariableNodes?: number
   /**
-   * Bounds how many deprecated elements are logged for one operation (default: `50`). When the cap
-   * is reached the log entry also carries `deprecatedElementsTruncated: true`.
+   * Bounds how many deprecated elements are logged for one operation (default: `50`)
    */
   maxElements?: number
 }
@@ -148,13 +149,13 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
         const additionalLogEntryProperties = augmentLogEntry ? (omitNil(augmentLogEntry(contextValue)) as Record<string, any>) : undefined
 
         let deprecatedElements: DeprecatedElementUsage[] | undefined
-        let deprecatedElementsTruncated: true | undefined
+        let deprecatedElementsTruncated: boolean | undefined
         // Skipped for subsequent payloads: the elements belong to the operation, so collecting per
         // payload would repeat the same array on every chunk of a @defer/@stream response.
         // `document` and `operation` are absent when the request failed to parse or validate.
         if (includeDeprecatedElements && !subsequentPayload && ctx.document && ctx.operation) {
           try {
-            deprecatedElements = collectDeprecatedElementUsage({
+            const usage = collectDeprecatedElementUsage({
               schema: ctx.schema,
               document: ctx.document,
               operation: ctx.operation,
@@ -166,7 +167,8 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
               maxVariableNodes,
               maxElements,
             })
-            if (deprecatedElements.length >= (maxElements ?? DEFAULT_MAX_ELEMENTS)) deprecatedElementsTruncated = true
+            deprecatedElements = usage.elements
+            deprecatedElementsTruncated = usage.truncated
           } catch (error) {
             // Telemetry must never turn a served request into a failed one.
             logger.warn('Failed to collect deprecated schema element usage', { error, operationName })

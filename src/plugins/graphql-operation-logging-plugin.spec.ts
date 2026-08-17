@@ -214,6 +214,27 @@ describe('graphqlOperationLoggingPlugin', () => {
       expect(uncapped.entry).not.toHaveProperty('deprecatedElementsTruncated')
     })
 
+    it('flags truncation when a variable walk limit is reached, not only the element cap', async () => {
+      // Without this the entry would look complete, and reading "nothing uses it" off a list that
+      // stopped early is how a still-used element gets deleted.
+      const { entry } = await run(
+        {
+          query: /* GraphQL */ `
+            mutation SaveWidget($input: WidgetFilterInput!) {
+              saveWidget(input: $input) {
+                name
+              }
+            }
+          `,
+          variables: { input: { legacyId: 'w1' } },
+        },
+        { includeDeprecatedElements: true, maxVariableNodes: 1 },
+      )
+
+      expect(entry).not.toHaveProperty('deprecatedElements')
+      expect(entry?.deprecatedElementsTruncated).toBe(true)
+    })
+
     it('serves the request and warns when collection fails', async () => {
       vi.spyOn(graphqlCore, 'collectDeprecatedElementUsage').mockImplementation(() => {
         throw new Error('boom')

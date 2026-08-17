@@ -56,7 +56,7 @@ Output includes:
 - `isIncrementalResponse`: `true` if the operation is part of an incremental delivery response (`@defer` or `@stream`)
 - `isSubsequentPayload`: `true` if the operation is a subsequent payload of an incremental delivery response
 - `deprecatedElements`: the `@deprecated` schema elements the operation used, if `includeDeprecatedElements` is `true` and it used any
-- `deprecatedElementsTruncated`: `true` if collection stopped at `maxElements`, meaning the operation may have used more
+- `deprecatedElementsTruncated`: `true` if any limit stopped collection early, meaning `deprecatedElements` may be incomplete
 
 ### Deprecation usage
 
@@ -76,6 +76,8 @@ Setting `includeDeprecatedElements: true` adds the `@deprecated` schema elements
 Because these ride on the operation's existing log entry, each record already carries whatever request and user metadata your context logger adds — so the telemetry answers _who_ is still using an element, not just _whether_ anyone is. Aggregate on `name`; `path` is a best-effort debugging aid.
 
 Collection is skipped for operations that `shouldIgnore` or `ignoreIntrospectionQueries` filter out, and for subsequent payloads of an incremental response (the elements belong to the operation, not to each chunk). If collection fails it is logged via the context logger's `warn` and the operation is logged without the key — telemetry never turns a served request into a failed one.
+
+**Check `deprecatedElementsTruncated` before concluding an element is unused.** Any of the three limits can stop collection early, and `maxVariableNodes` is the one a legitimate request can reach — a large batch mutation is shallow but wide. On a truncated entry the list is incomplete, so absence from it is not evidence of non-use. Exclude those entries when querying for usage rather than counting them as zero.
 
 The collection itself is [`collectDeprecatedElementUsage`](https://github.com/MakerXStudio/graphql-core#collectdeprecatedelementusage) from `@makerx/graphql-core`, which documents the detected element kinds and the limitations worth designing around. The same option is available on that package's `useSubscriptionsServer` for the subscription path.
 
