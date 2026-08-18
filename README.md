@@ -22,6 +22,16 @@ Logging of context creation failure can be enabled by supplying a logger to the 
 - `adjustVariables`: an optional callback that can be used to adjust the operation's `variables` before logging
 - `adjustResultData`: an optional callback that can be used to adjust the operation's `result.data` before logging
 - `adjustQuery`: an optional callback that can be used to adjust the operation's query before logging
+- `includeDeprecatedElements`: if `true`, the `@deprecated` schema elements the operation used will be logged as `deprecatedElements` (default: `false`) — see [Deprecation usage](#deprecation-usage)
+- `deprecationMaxVariableDepth`: bounds how deeply variable values are walked while looking for deprecated input fields and enum values (default: `25`)
+- `deprecationMaxVariableNodes`: bounds how many variable values are walked while looking for deprecated input fields and enum values (default: `10000`)
+- `deprecationMaxElements`: bounds how many deprecated elements are logged for one operation (default: `50`)
+
+Note that `TLogger` cannot be inferred from `TContext`, so supply both type arguments explicitly if you use a custom log level:
+
+```ts
+graphqlOperationLoggingPlugin<GraphQLContext, Logger>({ logLevel: 'audit' })
+```
 
 ```ts
 const plugins: ApolloServerPlugin<GraphQLContext>[] = [
@@ -45,6 +55,31 @@ Output includes:
 - `result.data`: the operation's data result, if `includeResponseData` is `true` or `includeMutationResponseData` is `true` and the operation is a mutation, optionally adjusted by the `adjustResultData` callback
 - `isIncrementalResponse`: `true` if the operation is part of an incremental delivery response (`@defer` or `@stream`)
 - `isSubsequentPayload`: `true` if the operation is a subsequent payload of an incremental delivery response
+- `deprecatedElements`: the `@deprecated` schema elements the operation used, if `includeDeprecatedElements` is `true` and it used any
+- `deprecatedElementsTruncated`: `true` if any limit stopped collection early, meaning `deprecatedElements` may be incomplete
+
+### Deprecation usage
+
+Setting `includeDeprecatedElements: true` adds the `@deprecated` schema elements an operation used to its log entry, so you can tell whether a deprecated element is safe to remove:
+
+```json
+{
+  "type": "query",
+  "operationName": "GetWidget",
+  "deprecatedElements": [
+    { "kind": "output-field", "name": "Widget.legacyName", "path": "widget.legacyName" },
+    { "kind": "input-field", "name": "WidgetFilterInput.legacyId", "path": "$input.legacyId" }
+  ]
+}
+```
+
+Because these ride on the operation's existing log entry, each record already carries whatever request and user metadata your context logger adds — so the telemetry answers _who_ is still using an element, not just _whether_ anyone is. Aggregate on `name`; `path` is a best-effort debugging aid.
+
+Collection is skipped for operations that `shouldIgnore` or `ignoreIntrospectionQueries` filter out, and for subsequent payloads of an incremental response (the elements belong to the operation, not to each chunk). If collection fails it is logged via the context logger's `warn` and the operation is logged without the key — telemetry never turns a served request into a failed one.
+
+**Check `deprecatedElementsTruncated` before concluding an element is unused.** Any of the three limits can stop collection early, and `deprecationMaxVariableNodes` is the one a legitimate request can reach — a large batch mutation is shallow but wide. On a truncated entry the list is incomplete, so absence from it is not evidence of non-use. Exclude those entries when querying for usage rather than counting them as zero.
+
+The collection itself is [`collectDeprecatedElementUsage`](https://github.com/MakerXStudio/graphql-core#collectdeprecatedelementusage) from `@makerx/graphql-core`, which documents the detected element kinds and the limitations worth designing around. The same option is available on that package's `useSubscriptionsServer` for the subscription path.
 
 ## Introspection Control Plugin
 

@@ -4,7 +4,14 @@ import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestListener,
 } from '@apollo/server'
-import { isIntrospectionQuery, logGraphQLOperation, type GraphQLContext, type LoggerLogFunctions } from '@makerx/graphql-core'
+import {
+  collectDeprecatedElementUsage,
+  isIntrospectionQuery,
+  logGraphQLOperation,
+  type DeprecatedElementUsage,
+  type GraphQLContext,
+  type LoggerLogFunctions,
+} from '@makerx/graphql-core'
 import type { Logger } from '@makerx/node-common'
 import { OperationTypeNode } from 'graphql'
 import { omitNil } from '../utils'
@@ -59,6 +66,30 @@ export interface GraphQLOperationLoggingPluginOptions<TContext extends GraphQLCo
    * Can be used to adjust the query before logging
    */
   adjustQuery?: (query?: string) => string | null
+  /**
+   * If true, the `@deprecated` schema elements the operation used will be logged as
+   * `deprecatedElements`, so you can tell whether a deprecated element is safe to remove.
+   * The key is omitted when the operation used none.
+   *
+   * When a limit stops collection early the entry also carries `deprecatedElementsTruncated: true`,
+   * meaning the list may be incomplete and absence from it does not prove an element is unused.
+   */
+  includeDeprecatedElements?: boolean
+  /**
+   * Only applies when `includeDeprecatedElements` is true: bounds how deeply variable values are
+   * walked while looking for deprecated input fields and enum values (default: `25`)
+   */
+  deprecationMaxVariableDepth?: number
+  /**
+   * Only applies when `includeDeprecatedElements` is true: bounds how many variable values are
+   * walked while looking for deprecated input fields and enum values (default: `10000`)
+   */
+  deprecationMaxVariableNodes?: number
+  /**
+   * Only applies when `includeDeprecatedElements` is true: bounds how many deprecated elements are
+   * logged for one operation (default: `50`)
+   */
+  deprecationMaxElements?: number
 }
 
 /**
@@ -78,6 +109,10 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
   augmentLogEntry,
   resolveLogger: resolveCustomLogger,
   adjustQuery,
+  includeDeprecatedElements,
+  deprecationMaxVariableDepth,
+  deprecationMaxVariableNodes,
+  deprecationMaxElements,
 }: GraphQLOperationLoggingPluginOptions<TContext, TLogger> = {}): ApolloServerPlugin<TContext> {
   return {
     contextCreationDidFail: async ({ error }) => {
@@ -93,7 +128,9 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
         const { started } = contextValue
         const { logger } = resolveCustomLogger ? { logger: resolveCustomLogger(contextValue) } : contextValue
         const { operationName, query, variables } = ctx.request
-        const isIntrospection = query && isIntrospectionQuery(query)
+        // `ctx.source` rather than `ctx.request.query`: an automatic persisted query carries no
+        // `query` on the request, so detecting introspection from it would miss those entirely.
+        const isIntrospection = isIntrospectionQuery(ctx.source)
         if (isIntrospection && ignoreIntrospectionQueries) return
 
         const type = ctx.operation?.operation
@@ -114,6 +151,33 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
 
         const additionalLogEntryProperties = augmentLogEntry ? (omitNil(augmentLogEntry(contextValue)) as Record<string, any>) : undefined
 
+        let deprecatedElements: DeprecatedElementUsage[] | undefined
+        let deprecatedElementsTruncated: boolean | undefined
+        // Skipped for subsequent payloads: the elements belong to the operation, so collecting per
+        // payload would repeat the same array on every chunk of a @defer/@stream response.
+        // `document` and `operation` are absent when the request failed to parse or validate.
+        if (includeDeprecatedElements && !subsequentPayload && ctx.document && ctx.operation) {
+          try {
+            const usage = collectDeprecatedElementUsage({
+              schema: ctx.schema,
+              document: ctx.document,
+              operation: ctx.operation,
+              operationName,
+              // Deliberately the raw request variables: the walk resolves them against their
+              // declared input types itself, and graphql-js never writes its coerced values back.
+              variables,
+              maxVariableDepth: deprecationMaxVariableDepth,
+              maxVariableNodes: deprecationMaxVariableNodes,
+              maxElements: deprecationMaxElements,
+            })
+            deprecatedElements = usage.elements
+            deprecatedElementsTruncated = usage.truncated
+          } catch (error) {
+            // Telemetry must never turn a served request into a failed one.
+            logger.warn('Failed to collect deprecated schema element usage', { error, operationName })
+          }
+        }
+
         logGraphQLOperation({
           logger,
           logLevel,
@@ -126,6 +190,8 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
           isIntrospectionQuery: isIntrospection || undefined,
           isIncrementalResponse: ctx.response.body.kind === 'incremental' || undefined,
           isSubsequentPayload: !!subsequentPayload || undefined,
+          deprecatedElements,
+          deprecatedElementsTruncated,
           ...additionalLogEntryProperties,
         })
       }
