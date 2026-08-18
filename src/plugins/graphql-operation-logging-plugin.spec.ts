@@ -164,9 +164,7 @@ describe('graphqlOperationLoggingPlugin', () => {
     it('reports elements named in the document', async () => {
       const { entry } = await run({ query: widgetWithDeprecatedField }, { includeDeprecatedElements: true })
 
-      expect(entry?.deprecatedElements).toEqual([
-        { kind: 'output-field', name: 'Widget.legacyName', deprecationReason: 'Use name.', path: 'widget.legacyName' },
-      ])
+      expect(entry?.deprecatedElements).toEqual([{ kind: 'output-field', name: 'Widget.legacyName', path: 'widget.legacyName' }])
     })
 
     it('reports input fields supplied via variables, which never appear in the document', async () => {
@@ -184,9 +182,7 @@ describe('graphqlOperationLoggingPlugin', () => {
         { includeDeprecatedElements: true },
       )
 
-      expect(entry?.deprecatedElements).toEqual([
-        { kind: 'input-field', name: 'WidgetFilterInput.legacyId', deprecationReason: 'Use id.', path: '$input.legacyId' },
-      ])
+      expect(entry?.deprecatedElements).toEqual([{ kind: 'input-field', name: 'WidgetFilterInput.legacyId', path: '$input.legacyId' }])
     })
 
     it('omits the key entirely when the operation used no deprecated element', async () => {
@@ -205,7 +201,7 @@ describe('graphqlOperationLoggingPlugin', () => {
         }
       `
 
-      const capped = await run({ query }, { includeDeprecatedElements: true, maxElements: 1 })
+      const capped = await run({ query }, { includeDeprecatedElements: true, deprecationMaxElements: 1 })
       expect(capped.entry?.deprecatedElements).toHaveLength(1)
       expect(capped.entry?.deprecatedElementsTruncated).toBe(true)
 
@@ -228,7 +224,7 @@ describe('graphqlOperationLoggingPlugin', () => {
           `,
           variables: { input: { legacyId: 'w1' } },
         },
-        { includeDeprecatedElements: true, maxVariableNodes: 1 },
+        { includeDeprecatedElements: true, deprecationMaxVariableNodes: 1 },
       )
 
       expect(entry).not.toHaveProperty('deprecatedElements')

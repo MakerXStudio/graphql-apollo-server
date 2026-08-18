@@ -76,17 +76,20 @@ export interface GraphQLOperationLoggingPluginOptions<TContext extends GraphQLCo
    */
   includeDeprecatedElements?: boolean
   /**
-   * Bounds how deeply variable values are walked when collecting deprecated elements (default: `25`)
+   * Only applies when `includeDeprecatedElements` is true: bounds how deeply variable values are
+   * walked while looking for deprecated input fields and enum values (default: `25`)
    */
-  maxVariableDepth?: number
+  deprecationMaxVariableDepth?: number
   /**
-   * Bounds how many variable values are walked when collecting deprecated elements (default: `10000`)
+   * Only applies when `includeDeprecatedElements` is true: bounds how many variable values are
+   * walked while looking for deprecated input fields and enum values (default: `10000`)
    */
-  maxVariableNodes?: number
+  deprecationMaxVariableNodes?: number
   /**
-   * Bounds how many deprecated elements are logged for one operation (default: `50`)
+   * Only applies when `includeDeprecatedElements` is true: bounds how many deprecated elements are
+   * logged for one operation (default: `50`)
    */
-  maxElements?: number
+  deprecationMaxElements?: number
 }
 
 /**
@@ -107,9 +110,9 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
   resolveLogger: resolveCustomLogger,
   adjustQuery,
   includeDeprecatedElements,
-  maxVariableDepth,
-  maxVariableNodes,
-  maxElements,
+  deprecationMaxVariableDepth,
+  deprecationMaxVariableNodes,
+  deprecationMaxElements,
 }: GraphQLOperationLoggingPluginOptions<TContext, TLogger> = {}): ApolloServerPlugin<TContext> {
   return {
     contextCreationDidFail: async ({ error }) => {
@@ -163,9 +166,9 @@ export function graphqlOperationLoggingPlugin<TContext extends GraphQLContext<TL
               // Deliberately the raw request variables: the walk resolves them against their
               // declared input types itself, and graphql-js never writes its coerced values back.
               variables,
-              maxVariableDepth,
-              maxVariableNodes,
-              maxElements,
+              maxVariableDepth: deprecationMaxVariableDepth,
+              maxVariableNodes: deprecationMaxVariableNodes,
+              maxElements: deprecationMaxElements,
             })
             deprecatedElements = usage.elements
             deprecatedElementsTruncated = usage.truncated

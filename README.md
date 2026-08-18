@@ -23,9 +23,9 @@ Logging of context creation failure can be enabled by supplying a logger to the 
 - `adjustResultData`: an optional callback that can be used to adjust the operation's `result.data` before logging
 - `adjustQuery`: an optional callback that can be used to adjust the operation's query before logging
 - `includeDeprecatedElements`: if `true`, the `@deprecated` schema elements the operation used will be logged as `deprecatedElements` (default: `false`) — see [Deprecation usage](#deprecation-usage)
-- `maxVariableDepth`: bounds how deeply variable values are walked when collecting deprecated elements (default: `25`)
-- `maxVariableNodes`: bounds how many variable values are walked when collecting deprecated elements (default: `10000`)
-- `maxElements`: bounds how many deprecated elements are logged for one operation (default: `50`)
+- `deprecationMaxVariableDepth`: bounds how deeply variable values are walked while looking for deprecated input fields and enum values (default: `25`)
+- `deprecationMaxVariableNodes`: bounds how many variable values are walked while looking for deprecated input fields and enum values (default: `10000`)
+- `deprecationMaxElements`: bounds how many deprecated elements are logged for one operation (default: `50`)
 
 Note that `TLogger` cannot be inferred from `TContext`, so supply both type arguments explicitly if you use a custom log level:
 
@@ -67,8 +67,8 @@ Setting `includeDeprecatedElements: true` adds the `@deprecated` schema elements
   "type": "query",
   "operationName": "GetWidget",
   "deprecatedElements": [
-    { "kind": "output-field", "name": "Widget.legacyName", "deprecationReason": "Use name.", "path": "widget.legacyName" },
-    { "kind": "input-field", "name": "WidgetFilterInput.legacyId", "deprecationReason": "Use id.", "path": "$input.legacyId" }
+    { "kind": "output-field", "name": "Widget.legacyName", "path": "widget.legacyName" },
+    { "kind": "input-field", "name": "WidgetFilterInput.legacyId", "path": "$input.legacyId" }
   ]
 }
 ```
@@ -77,7 +77,7 @@ Because these ride on the operation's existing log entry, each record already ca
 
 Collection is skipped for operations that `shouldIgnore` or `ignoreIntrospectionQueries` filter out, and for subsequent payloads of an incremental response (the elements belong to the operation, not to each chunk). If collection fails it is logged via the context logger's `warn` and the operation is logged without the key — telemetry never turns a served request into a failed one.
 
-**Check `deprecatedElementsTruncated` before concluding an element is unused.** Any of the three limits can stop collection early, and `maxVariableNodes` is the one a legitimate request can reach — a large batch mutation is shallow but wide. On a truncated entry the list is incomplete, so absence from it is not evidence of non-use. Exclude those entries when querying for usage rather than counting them as zero.
+**Check `deprecatedElementsTruncated` before concluding an element is unused.** Any of the three limits can stop collection early, and `deprecationMaxVariableNodes` is the one a legitimate request can reach — a large batch mutation is shallow but wide. On a truncated entry the list is incomplete, so absence from it is not evidence of non-use. Exclude those entries when querying for usage rather than counting them as zero.
 
 The collection itself is [`collectDeprecatedElementUsage`](https://github.com/MakerXStudio/graphql-core#collectdeprecatedelementusage) from `@makerx/graphql-core`, which documents the detected element kinds and the limitations worth designing around. The same option is available on that package's `useSubscriptionsServer` for the subscription path.
 
